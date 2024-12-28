@@ -1,11 +1,21 @@
 ###
 
-GET http://localhost:3000
+GET http://localhost:3000/posts?owner=Max2
 
 ###
 
 POST http://localhost:3000/posts
+Content-Type: application/json
+
+{
+  "owner": "Max2",
+  "title": "My first post",
+  "content": "This is my first post"
+}
 
 ###
 
-GET http://localhost:3000/posts
+GET http://localhost:3000/posts/67700f76a7f611bed8129938
+
+###
+DELETE http://localhost:3000/posts/67700f76a7f611bed8129938
