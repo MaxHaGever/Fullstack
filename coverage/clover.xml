@@ -1,81 +1,90 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<coverage generated="1735480396454" clover="3.2.0">
-  <project timestamp="1735480396454" name="All files">
-    <metrics statements="58" coveredstatements="44" conditionals="2" coveredconditionals="1" methods="6" coveredmethods="3" elements="66" coveredelements="48" complexity="0" loc="58" ncloc="58" packages="4" files="4" classes="4"/>
-    <package name="myapp">
-      <metrics statements="15" coveredstatements="15" conditionals="0" coveredconditionals="0" methods="2" coveredmethods="1"/>
-      <file name="server.js" path="/Users/maxspector/Desktop/myapp/server.js">
-        <metrics statements="15" coveredstatements="15" conditionals="0" coveredconditionals="0" methods="2" coveredmethods="1"/>
+<coverage generated="1735561580455" clover="3.2.0">
+  <project timestamp="1735561580455" name="All files">
+    <metrics statements="67" coveredstatements="48" conditionals="3" coveredconditionals="1" methods="12" coveredmethods="8" elements="82" coveredelements="57" complexity="0" loc="67" ncloc="67" packages="4" files="4" classes="4"/>
+    <package name="src">
+      <metrics statements="24" coveredstatements="19" conditionals="1" coveredconditionals="0" methods="4" coveredmethods="4"/>
+      <file name="server.ts" path="/Users/maxspector/Desktop/myapp/src/server.ts">
+        <metrics statements="24" coveredstatements="19" conditionals="1" coveredconditionals="0" methods="4" coveredmethods="4"/>
         <line num="1" count="1" type="stmt"/>
         <line num="2" count="1" type="stmt"/>
         <line num="3" count="1" type="stmt"/>
         <line num="4" count="1" type="stmt"/>
-        <line num="6" count="1" type="stmt"/>
+        <line num="5" count="1" type="stmt"/>
         <line num="7" count="1" type="stmt"/>
-        <line num="8" count="1" type="stmt"/>
-        <line num="10" count="1" type="stmt"/>
+        <line num="9" count="1" type="stmt"/>
         <line num="11" count="1" type="stmt"/>
         <line num="12" count="1" type="stmt"/>
         <line num="13" count="1" type="stmt"/>
-        <line num="14" count="1" type="stmt"/>
-        <line num="16" count="1" type="stmt"/>
-        <line num="17" count="1" type="stmt"/>
-        <line num="21" count="1" type="stmt"/>
+        <line num="15" count="1" type="cond" truecount="0" falsecount="1"/>
+        <line num="16" count="0" type="stmt"/>
+        <line num="17" count="0" type="stmt"/>
+        <line num="18" count="0" type="stmt"/>
+        <line num="22" count="1" type="stmt"/>
+        <line num="23" count="1" type="stmt"/>
+        <line num="26" count="1" type="stmt"/>
+        <line num="27" count="1" type="stmt"/>
+        <line num="30" count="1" type="stmt"/>
+        <line num="32" count="1" type="stmt"/>
+        <line num="33" count="1" type="stmt"/>
+        <line num="35" count="0" type="stmt"/>
+        <line num="36" count="0" type="stmt"/>
+        <line num="41" count="1" type="stmt"/>
       </file>
     </package>
-    <package name="myapp.Routes">
+    <package name="src.Routes">
       <metrics statements="8" coveredstatements="8" conditionals="0" coveredconditionals="0" methods="0" coveredmethods="0"/>
-      <file name="Posts_routes.js" path="/Users/maxspector/Desktop/myapp/Routes/Posts_routes.js">
+      <file name="Posts_routes.ts" path="/Users/maxspector/Desktop/myapp/src/Routes/Posts_routes.ts">
         <metrics statements="8" coveredstatements="8" conditionals="0" coveredconditionals="0" methods="0" coveredmethods="0"/>
         <line num="1" count="1" type="stmt"/>
         <line num="2" count="1" type="stmt"/>
         <line num="3" count="1" type="stmt"/>
-        <line num="5" count="1" type="stmt"/>
         <line num="6" count="1" type="stmt"/>
         <line num="7" count="1" type="stmt"/>
         <line num="8" count="1" type="stmt"/>
-        <line num="10" count="1" type="stmt"/>
+        <line num="9" count="1" type="stmt"/>
+        <line num="11" count="1" type="stmt"/>
       </file>
     </package>
-    <package name="myapp.controllers">
-      <metrics statements="30" coveredstatements="16" conditionals="2" coveredconditionals="1" methods="4" coveredmethods="2"/>
-      <file name="post.js" path="/Users/maxspector/Desktop/myapp/controllers/post.js">
-        <metrics statements="30" coveredstatements="16" conditionals="2" coveredconditionals="1" methods="4" coveredmethods="2"/>
+    <package name="src.controllers">
+      <metrics statements="30" coveredstatements="16" conditionals="2" coveredconditionals="1" methods="8" coveredmethods="4"/>
+      <file name="post_controller.ts" path="/Users/maxspector/Desktop/myapp/src/controllers/post_controller.ts">
+        <metrics statements="30" coveredstatements="16" conditionals="2" coveredconditionals="1" methods="8" coveredmethods="4"/>
         <line num="1" count="1" type="stmt"/>
         <line num="2" count="1" type="stmt"/>
-        <line num="4" count="1" type="stmt"/>
         <line num="5" count="2" type="stmt"/>
         <line num="6" count="2" type="stmt"/>
-        <line num="7" count="2" type="cond" truecount="1" falsecount="1"/>
-        <line num="8" count="0" type="stmt"/>
+        <line num="7" count="2" type="stmt"/>
+        <line num="8" count="2" type="cond" truecount="1" falsecount="1"/>
         <line num="9" count="0" type="stmt"/>
-        <line num="11" count="2" type="stmt"/>
+        <line num="10" count="0" type="stmt"/>
         <line num="12" count="2" type="stmt"/>
-        <line num="15" count="0" type="stmt"/>
-        <line num="19" count="1" type="stmt"/>
-        <line num="20" count="0" type="stmt"/>
+        <line num="13" count="2" type="stmt"/>
+        <line num="16" count="0" type="stmt"/>
+        <line num="20" count="1" type="stmt"/>
         <line num="21" count="0" type="stmt"/>
         <line num="22" count="0" type="stmt"/>
         <line num="23" count="0" type="stmt"/>
-        <line num="25" count="0" type="stmt"/>
-        <line num="29" count="1" type="stmt"/>
+        <line num="24" count="0" type="stmt"/>
+        <line num="26" count="0" type="stmt"/>
         <line num="30" count="2" type="stmt"/>
         <line num="31" count="2" type="stmt"/>
         <line num="32" count="2" type="stmt"/>
         <line num="33" count="2" type="stmt"/>
-        <line num="35" count="0" type="stmt"/>
-        <line num="39" count="1" type="stmt"/>
-        <line num="40" count="0" type="stmt"/>
+        <line num="34" count="2" type="stmt"/>
+        <line num="36" count="0" type="stmt"/>
+        <line num="40" count="1" type="stmt"/>
         <line num="41" count="0" type="stmt"/>
         <line num="42" count="0" type="stmt"/>
         <line num="43" count="0" type="stmt"/>
-        <line num="45" count="0" type="stmt"/>
-        <line num="49" count="1" type="stmt"/>
+        <line num="44" count="0" type="stmt"/>
+        <line num="46" count="0" type="stmt"/>
+        <line num="50" count="1" type="stmt"/>
       </file>
     </package>
-    <package name="myapp.models">
+    <package name="src.models">
       <metrics statements="5" coveredstatements="5" conditionals="0" coveredconditionals="0" methods="0" coveredmethods="0"/>
-      <file name="post_model.js" path="/Users/maxspector/Desktop/myapp/models/post_model.js">
+      <file name="post_model.ts" path="/Users/maxspector/Desktop/myapp/src/models/post_model.ts">
         <metrics statements="5" coveredstatements="5" conditionals="0" coveredconditionals="0" methods="0" coveredmethods="0"/>
         <line num="1" count="1" type="stmt"/>
         <line num="2" count="1" type="stmt"/>
