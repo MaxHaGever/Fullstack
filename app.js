@@ -5,6 +5,7 @@ const router = express.Router();
 const dotenv = require('dotenv').config()
 const port = process.env.PORT
 const dbURI = process.env.dbURI
+app.use(express.json());
 
 mongoose.connect(dbURI, {})
     .then(() => console.log('DB connected'))
