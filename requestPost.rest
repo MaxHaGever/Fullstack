@@ -4,11 +4,11 @@ GET http://localhost:3004/post
 
 ###
 // Get Posts by Sender
-GET http://localhost:3004/post/by-sender?sender=User123
+GET http://localhost:3004/post/by-sender?sender=User1
 
 ###
 //Get post by ID
-GET http://localhost:3004/post/677a524057db0c76a81b25af
+GET http://localhost:3004/post/677c098ac99318873df51df0
 
 ###
 //Create new post
@@ -16,14 +16,14 @@ POST http://localhost:3004/post
 Content-Type: application/json
 
 {
-    "title": "My Second Post",
+    "title": "My First Post",
     "content": "This is my Second post!",
-    "sender": "User123"
+    "sender": "User1"
 }
 
 ### 
 //Update a Post
-PUT http://localhost:3004/post/677a51d957db0c76a81b25ab
+PUT http://localhost:3004/post/677c098ac99318873df51df0
 Content-Type: application/json
 
 {

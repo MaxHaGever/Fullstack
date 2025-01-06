@@ -17,6 +17,9 @@ app.use('/',indexRouter);
 const postRouter = require('./routes/post_routes')
 app.use('/post',postRouter)
 
+const commentRouter = require('./routes/comment_routes');
+app.use('/comments', commentRouter);
+
 app.listen(port, () => {
     console.log(`App listening to port: ${port}`)
 });

@@ -10,6 +10,15 @@ const createComment = async (req, res) => {
     }
 };
 
+const getComments = async (req, res) => {
+    try {
+        const comments = await Comment.find();
+        res.status(200).send(comments);
+    } catch (err) {
+        res.status(500).send({ error: 'Failed to fetch comments', details: err });
+    }
+};
+
 const getCommentsByPost = async (req, res) => {
     try {
         const comments = await Comment.find({ postId: req.params.postId });
@@ -39,4 +48,4 @@ const deleteComment = async (req, res) => {
     }
 };
 
-module.exports = { createComment, getCommentsByPost, updateComment, deleteComment };
+module.exports = { createComment, getCommentsByPost, updateComment, deleteComment, getComments };
