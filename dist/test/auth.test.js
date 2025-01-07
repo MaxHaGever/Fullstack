@@ -17,7 +17,12 @@ const supertest_1 = __importDefault(require("supertest"));
 const student_1 = __importDefault(require("../../src/models/student")); // Adjust path if needed
 const app_1 = __importDefault(require("../app"));
 beforeAll(() => __awaiter(void 0, void 0, void 0, function* () {
-    yield mongoose_1.default.connect(process.env.dbURI);
+    const dbURI = process.env.dbURI;
+    if (!dbURI) {
+        throw new Error("Database connection string (dbURI) is not defined");
+    }
+    yield mongoose_1.default.connect(dbURI);
+    yield mongoose_1.default.connect(dbURI);
     yield student_1.default.deleteMany(); // Clean the database before tests
 }));
 afterAll(() => __awaiter(void 0, void 0, void 0, function* () {

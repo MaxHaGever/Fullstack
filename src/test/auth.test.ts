@@ -1,10 +1,15 @@
 import mongoose from "mongoose";
 import request from "supertest";
-import Student from "../../src/models/student"; // Adjust path if needed
+import Student, { IStudent } from "../../src/models/student"; // Adjust path if needed
 import app from "../app"
 
 beforeAll(async () => {
-    await mongoose.connect(process.env.dbURI)
+    const dbURI = process.env.dbURI;
+    if (!dbURI) {
+    throw new Error("Database connection string (dbURI) is not defined");
+}
+    await mongoose.connect(dbURI);
+    await mongoose.connect(dbURI)
     await Student.deleteMany(); // Clean the database before tests
 });
 
@@ -35,7 +40,7 @@ describe("Student API Tests", () => {
         expect(res.statusCode).toEqual(200);
         expect(res.body).toBeInstanceOf(Array);
         expect(res.body.length).toBeGreaterThanOrEqual(2);
-        const studentNames: string[] = res.body.map((student) => student.name);
+        const studentNames: string[] = res.body.map((student: IStudent) => student.name);
         expect(studentNames).toContain("Alice");
         expect(studentNames).toContain("Bob");
     });
