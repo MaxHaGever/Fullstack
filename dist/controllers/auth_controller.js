@@ -69,21 +69,25 @@ const login = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     }
 });
 const authMiddleware = (req, res, next) => {
-    const authHeader = req.headers['authorization'];
-    const token = authHeader && authHeader.split(' ')[1];
+    const authHeader = req.headers["authorization"];
+    const token = authHeader && authHeader.split(" ")[1];
+    console.log("Authorization Header:", authHeader); // Debug authorization header
+    console.log("Extracted Token:", token); // Debug token
     if (!token) {
-        res.status(401).send('missing token');
+        res.status(401).send("Missing token");
         return;
     }
     if (!process.env.TOKEN_SECRET) {
-        res.status(400).send("Missing token");
+        res.status(400).send("Missing token secret");
         return;
     }
     jsonwebtoken_1.default.verify(token, process.env.TOKEN_SECRET, (err) => {
         if (err) {
+            console.error("Token verification failed:", err); // Debug verification error
             res.status(403).send("Invalid token");
             return;
         }
+        console.log("Token verified successfully"); // Debug token verification success
         next();
     });
 };

@@ -33,19 +33,21 @@ const userInfo = {
 };
 describe("Auth Tests", () => {
     test("Auth Registration", () => __awaiter(void 0, void 0, void 0, function* () {
-        const response = yield (0, supertest_1.default)(app_1.default).post("/auth/register").send(userInfo); // Send userInfo directly
-        console.log(response.body); // Debugging
+        const response = yield (0, supertest_1.default)(app_1.default).post("/auth/register").send(userInfo);
+        console.log("Registration Response Body:", response.body); // Debug response body
         expect(response.statusCode).toBe(200);
     }));
     test("Auth Login", () => __awaiter(void 0, void 0, void 0, function* () {
         const loginResponse = yield (0, supertest_1.default)(app_1.default).post("/auth/login").send(userInfo);
-        console.log("Login Response Status:", loginResponse.statusCode);
-        console.log("Login Response Body:", loginResponse.body);
+        console.log("Login Response Status:", loginResponse.statusCode); // Debug status code
+        console.log("Login Response Body:", loginResponse.body); // Debug response body
         expect(loginResponse.statusCode).toBe(200);
         const token = loginResponse.body.token;
         expect(token).toBeDefined();
         const userId = loginResponse.body._id;
         expect(userId).toBeDefined();
+        console.log("Token from Login:", token); // Debug token
+        console.log("User ID from Login:", userId); // Debug user ID
         userInfo.token = token;
         userInfo._id = userId;
     }));
@@ -54,21 +56,25 @@ describe("Auth Tests", () => {
         const response = yield (0, supertest_1.default)(app_1.default)
             .post("/posts")
             .send({
-            owner: userInfo._id,
+            sender: userInfo._id,
             title: "My First Post",
             content: "This is my first post",
         });
-        expect(response.statusCode).not.toBe(201); // Ensure unauthorized access is denied
+        console.log("Unauthorized Response Status:", response.statusCode); // Debug status code
+        console.log("Unauthorized Response Body:", response.body); // Debug response body
+        expect(response.statusCode).not.toBe(201);
         // Second request: With Authorization
         const response2 = yield (0, supertest_1.default)(app_1.default)
             .post("/posts")
-            .set("Authorization", `Bearer ${userInfo.token}`) // Correct placement of .set()
+            .set("Authorization", `Bearer ${userInfo.token}`)
             .send({
-            owner: userInfo._id,
+            sender: userInfo._id,
             title: "My First Post",
             content: "This is my first post",
         });
-        expect(response2.statusCode).toBe(201); // Ensure authorized access is successful
+        console.log("Authorized Response Status:", response2.statusCode); // Debug status code
+        console.log("Authorized Response Body:", response2.body); // Debug response body
+        expect(response2.statusCode).toBe(201);
     }));
 });
 //# sourceMappingURL=auth.test.js.map
