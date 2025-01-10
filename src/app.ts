@@ -5,6 +5,7 @@ import mongoose from "mongoose";
 import studentRoutes from "./routes/student_routes";
 import postRoutes from "./routes/post_routes"; // Import Post routes
 import commentRoutes from "./routes/comment_routes"; // Import Comment routes
+import authRoutes from "./routes/auth_routes"
 
 dotenv.config();
 
@@ -24,7 +25,8 @@ app.use(bodyParser.urlencoded({ extended: true }));
 // Load routes
 app.use("/students", studentRoutes);
 app.use("/posts", postRoutes); // Add Post routes
-app.use("/comments", commentRoutes); // Add Comment routes
+app.use("/comments", commentRoutes);
+app.use("/auth", authRoutes); // Add Comment routes
 
 // Connect to the database
 mongoose
