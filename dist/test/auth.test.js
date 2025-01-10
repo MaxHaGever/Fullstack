@@ -16,6 +16,7 @@ const mongoose_1 = __importDefault(require("mongoose"));
 const supertest_1 = __importDefault(require("supertest"));
 const app_1 = __importDefault(require("../app"));
 const user_model_1 = __importDefault(require("../models/user_model"));
+const post_1 = __importDefault(require("../models/post"));
 beforeAll(() => __awaiter(void 0, void 0, void 0, function* () {
     const dbURI = process.env.dbURI;
     if (!dbURI) {
@@ -23,6 +24,7 @@ beforeAll(() => __awaiter(void 0, void 0, void 0, function* () {
     }
     yield mongoose_1.default.connect(dbURI);
     yield user_model_1.default.deleteMany();
+    yield post_1.default.deleteMany();
 }));
 afterAll(() => __awaiter(void 0, void 0, void 0, function* () {
     yield mongoose_1.default.disconnect();
@@ -34,8 +36,11 @@ const userInfo = {
 describe("Auth Tests", () => {
     test("Auth Registration", () => __awaiter(void 0, void 0, void 0, function* () {
         const response = yield (0, supertest_1.default)(app_1.default).post("/auth/register").send(userInfo);
-        console.log("Registration Response Body:", response.body); // Debug response body
         expect(response.statusCode).toBe(200);
+    }));
+    test("Auth Registration fail", () => __awaiter(void 0, void 0, void 0, function* () {
+        const response = yield (0, supertest_1.default)(app_1.default).post("/auth/register").send(userInfo);
+        expect(response.statusCode).not.toBe(200);
     }));
     test("Auth Login", () => __awaiter(void 0, void 0, void 0, function* () {
         const loginResponse = yield (0, supertest_1.default)(app_1.default).post("/auth/login").send(userInfo);
@@ -56,7 +61,7 @@ describe("Auth Tests", () => {
         const response = yield (0, supertest_1.default)(app_1.default)
             .post("/posts")
             .send({
-            sender: userInfo._id,
+            sender: "invalid",
             title: "My First Post",
             content: "This is my first post",
         });
@@ -68,13 +73,27 @@ describe("Auth Tests", () => {
             .post("/posts")
             .set("Authorization", `Bearer ${userInfo.token}`)
             .send({
-            sender: userInfo._id,
+            sender: "invalid",
             title: "My First Post",
             content: "This is my first post",
         });
         console.log("Authorized Response Status:", response2.statusCode); // Debug status code
         console.log("Authorized Response Body:", response2.body); // Debug response body
         expect(response2.statusCode).toBe(201);
+    }));
+    test("Get protected API invalid token", () => __awaiter(void 0, void 0, void 0, function* () {
+        // First request: Without Authorization
+        const response = yield (0, supertest_1.default)(app_1.default)
+            .post("/posts")
+            .set("Authorization", `Bearer ${userInfo.token + '1'}`)
+            .send({
+            sender: userInfo._id,
+            title: "My First Post",
+            content: "This is my first post",
+        });
+        console.log("Unauthorized Response Status:", response.statusCode); // Debug status code
+        console.log("Unauthorized Response Body:", response.body); // Debug response body
+        expect(response.statusCode).not.toBe(201);
     }));
 });
 //# sourceMappingURL=auth.test.js.map

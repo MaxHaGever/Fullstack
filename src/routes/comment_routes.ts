@@ -1,4 +1,5 @@
 import express, { Router } from "express";
+import {authMiddleware} from "../controllers/auth_controller"
 import {
     createComment,
     getCommentsByPost,
@@ -10,10 +11,10 @@ import {
 const router: Router = express.Router();
 
 // Define routes
-router.post("/", createComment); // Create a comment
+router.post("/",authMiddleware, createComment); // Create a comment
 router.get("/post/:postId", getCommentsByPost); // Get comments by post ID
 router.get("/", getComments); // Get all comments
-router.put("/:id", updateComment); // Update a comment by ID
-router.delete("/:id", deleteComment); // Delete a comment by ID
+router.put("/:id",authMiddleware, updateComment); // Update a comment by ID
+router.delete("/:id",authMiddleware, deleteComment); // Delete a comment by ID
 
 export default router;

@@ -4,26 +4,49 @@ import bcrypt from 'bcrypt'
 import jwt from 'jsonwebtoken'
 import dotenv from 'dotenv';
 dotenv.config();
+import { JwtPayload } from "jsonwebtoken";
+
+interface CustomJwtPayload extends JwtPayload {
+    _id: string;
+}
 
 const register = async (req: Request, res: Response) => {
-    const email = req.body.email
-    const password = req.body.password
-    if(!email || !password){
-        res.status(400).send("Missing email or password")
+    const email = req.body.email;
+    const password = req.body.password;
+
+    console.log("Register Request Body:", req.body); // Debug incoming request
+
+    if (!email || !password) {
+        res.status(400).send("Missing email or password");
+        return;
     }
-    try{
-        const salt = await bcrypt.genSalt(10)
-        const hashPassword = await bcrypt.hash(password, salt)
+
+    try {
+        const existingUser = await Users.findOne({ email }); // Check if email already exists
+        if (existingUser) {
+            console.log("Registration Failed: Email already exists"); // Debug duplicate registration
+            return res.status(400).send("Email already registered");
+        }
+
+        const salt = await bcrypt.genSalt(10);
+        console.log("Salt generated for password:", salt); // Debug salt generation
+
+        const hashPassword = await bcrypt.hash(password, salt);
+        console.log("Hashed Password:", hashPassword); // Debug hashed password
+
         const user = await Users.create({
             email: email,
             password: hashPassword,
-        })
-        return res.status(200).send(user)
-    }catch(err){
-        return res.status(400).send(err)       
-    }
+        });
 
-}
+        console.log("User Created:", user); // Debug created user
+        return res.status(200).send(user);
+    } catch (err) {
+        console.error("Error during registration:", err); // Debug errors
+        return res.status(400).send(err);
+    }
+};
+
 
 const login = async (req: Request, res: Response) => {
     const email = req.body.email;
@@ -84,7 +107,7 @@ export const authMiddleware = (req: Request, res: Response, next: NextFunction) 
         return;
     }
 
-    jwt.verify(token, process.env.TOKEN_SECRET, (err) => {
+    jwt.verify(token, process.env.TOKEN_SECRET, (err, payload) => {
         if (err) {
             console.error("Token verification failed:", err); // Debug verification error
             res.status(403).send("Invalid token");
@@ -92,9 +115,15 @@ export const authMiddleware = (req: Request, res: Response, next: NextFunction) 
         }
 
         console.log("Token verified successfully"); // Debug token verification success
+
+        // Assert payload is of type CustomJwtPayload
+        const decodedPayload = payload as CustomJwtPayload;
+
+        req.query.userId = decodedPayload._id; // Now TypeScript recognizes _id
         next();
     });
 };
+
 
 
 

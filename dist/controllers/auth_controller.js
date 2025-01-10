@@ -21,19 +21,30 @@ dotenv_1.default.config();
 const register = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const email = req.body.email;
     const password = req.body.password;
+    console.log("Register Request Body:", req.body); // Debug incoming request
     if (!email || !password) {
         res.status(400).send("Missing email or password");
+        return;
     }
     try {
+        const existingUser = yield user_model_1.default.findOne({ email }); // Check if email already exists
+        if (existingUser) {
+            console.log("Registration Failed: Email already exists"); // Debug duplicate registration
+            return res.status(400).send("Email already registered");
+        }
         const salt = yield bcrypt_1.default.genSalt(10);
+        console.log("Salt generated for password:", salt); // Debug salt generation
         const hashPassword = yield bcrypt_1.default.hash(password, salt);
+        console.log("Hashed Password:", hashPassword); // Debug hashed password
         const user = yield user_model_1.default.create({
             email: email,
             password: hashPassword,
         });
+        console.log("User Created:", user); // Debug created user
         return res.status(200).send(user);
     }
     catch (err) {
+        console.error("Error during registration:", err); // Debug errors
         return res.status(400).send(err);
     }
 });
@@ -81,13 +92,16 @@ const authMiddleware = (req, res, next) => {
         res.status(400).send("Missing token secret");
         return;
     }
-    jsonwebtoken_1.default.verify(token, process.env.TOKEN_SECRET, (err) => {
+    jsonwebtoken_1.default.verify(token, process.env.TOKEN_SECRET, (err, payload) => {
         if (err) {
             console.error("Token verification failed:", err); // Debug verification error
             res.status(403).send("Invalid token");
             return;
         }
         console.log("Token verified successfully"); // Debug token verification success
+        // Assert payload is of type CustomJwtPayload
+        const decodedPayload = payload;
+        req.query.userId = decodedPayload._id; // Now TypeScript recognizes _id
         next();
     });
 };

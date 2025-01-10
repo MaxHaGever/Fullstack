@@ -2,6 +2,7 @@ import mongoose from "mongoose";
 import request from "supertest";
 import app from "../app";
 import Users from "../models/user_model"
+import postModel from "../models/post"
 
 
 beforeAll(async () => {
@@ -11,6 +12,7 @@ beforeAll(async () => {
     }
     await mongoose.connect(dbURI);
     await Users.deleteMany()
+    await postModel.deleteMany()
 });
 
 afterAll(async () => {
@@ -32,8 +34,12 @@ const userInfo: UserInfo = {
 describe("Auth Tests", () => {
     test("Auth Registration", async () => {
         const response = await request(app).post("/auth/register").send(userInfo);
-        console.log("Registration Response Body:", response.body); // Debug response body
         expect(response.statusCode).toBe(200);
+    });
+
+    test("Auth Registration fail", async () => {
+        const response = await request(app).post("/auth/register").send(userInfo);
+        expect(response.statusCode).not.toBe(200);
     });
     
     test("Auth Login", async () => {
@@ -61,7 +67,7 @@ describe("Auth Tests", () => {
         const response = await request(app)
             .post("/posts")
             .send({
-                sender: userInfo._id,
+                sender: "invalid",
                 title: "My First Post",
                 content: "This is my first post",
             });
@@ -74,13 +80,28 @@ describe("Auth Tests", () => {
             .post("/posts")
             .set("Authorization", `Bearer ${userInfo.token}`)
             .send({
-                sender: userInfo._id,
+                sender: "invalid",
                 title: "My First Post",
                 content: "This is my first post",
             });
         console.log("Authorized Response Status:", response2.statusCode); // Debug status code
         console.log("Authorized Response Body:", response2.body); // Debug response body
         expect(response2.statusCode).toBe(201);
+    });
+
+    test("Get protected API invalid token", async () => {
+        // First request: Without Authorization
+        const response = await request(app)
+            .post("/posts")
+            .set("Authorization", `Bearer ${userInfo.token+ '1'}`)
+            .send({
+                sender: userInfo._id,
+                title: "My First Post",
+                content: "This is my first post",
+            });
+        console.log("Unauthorized Response Status:", response.statusCode); // Debug status code
+        console.log("Unauthorized Response Body:", response.body); // Debug response body
+        expect(response.statusCode).not.toBe(201);
     });
 
 

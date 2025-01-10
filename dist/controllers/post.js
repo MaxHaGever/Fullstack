@@ -17,7 +17,9 @@ const post_1 = __importDefault(require("../models/post")); // Assuming Post is e
 // Define createPost function
 const createPost = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        const post = new post_1.default(req.body);
+        const _id = req.query.userId;
+        const post = new post_1.default(Object.assign(Object.assign({}, req.body), { sender: _id }));
+        req.body = post;
         yield post.save();
         res.status(201).send(post);
     }

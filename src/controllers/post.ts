@@ -4,7 +4,12 @@ import Post from "../models/post"; // Assuming Post is exported as a default Typ
 // Define createPost function
 export const createPost = async (req: Request, res: Response): Promise<void> => {
     try {
-        const post = new Post(req.body);
+        const _id = req.query.userId
+        const post = new Post({
+            ...req.body,
+            sender: _id
+        });
+        req.body = post
         await post.save();
         res.status(201).send(post);
     } catch (err) {
