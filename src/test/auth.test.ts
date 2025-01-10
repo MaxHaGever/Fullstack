@@ -1,6 +1,8 @@
 import mongoose from "mongoose";
 import request from "supertest";
 import app from "../app";
+import Users from "../models/user_model"
+
 
 beforeAll(async () => {
     const dbURI = process.env.dbURI;
@@ -8,6 +10,7 @@ beforeAll(async () => {
         throw new Error("Database connection string (dbURI) is not defined");
     }
     await mongoose.connect(dbURI);
+    await Users.deleteMany()
 });
 
 afterAll(async () => {
@@ -34,21 +37,22 @@ describe("Auth Tests", () => {
     });
 
     test("Auth Login", async () => {
-        const loginResponse = await request(app).post("/auth/login").send(userInfo); // Send userInfo directly
-        console.log(loginResponse.body); // Debugging response body
-
+        const loginResponse = await request(app).post("/auth/login").send(userInfo);
+        console.log("Login Response Status:", loginResponse.statusCode);
+        console.log("Login Response Body:", loginResponse.body);
+    
         expect(loginResponse.statusCode).toBe(200);
-
-        const token = loginResponse.body.token; // Access token from response body
-        expect(token).toBeDefined()
-
-        const userId = loginResponse.body._id; // Access _id from response body
-        expect(userId).toBeDefined()
-
-        // Save the token and _id to the userInfo object
+    
+        const token = loginResponse.body.token;
+        expect(token).toBeDefined();
+    
+        const userId = loginResponse.body._id;
+        expect(userId).toBeDefined();
+    
         userInfo.token = token;
         userInfo._id = userId;
     });
+    
 
     test("Get protected API", async () => {
         // First request: Without Authorization

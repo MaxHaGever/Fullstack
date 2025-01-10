@@ -7,7 +7,7 @@ router.post("/register" , (req: Request, res: Response) => {
     authController.register(req,res)
 })
 
-router.get("/login" , (req: Request, res: Response) => {
+router.post("/login" , (req: Request, res: Response) => {
     authController.login(req,res)
 })
 

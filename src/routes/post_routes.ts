@@ -1,4 +1,5 @@
 import express, { Router } from "express";
+import {authMiddleware} from "../controllers/auth_controller"
 import {
     createPost,
     getPosts,
@@ -13,9 +14,9 @@ const router: Router = express.Router();
 // Specific routes should come first
 router.get("/by-sender", getPostsBySender); // Get posts by sender
 router.get("/:id", getPostById);            // Get a post by ID
-router.post("/", createPost);               // Add a new post
+router.post("/", authMiddleware, createPost);               // Add a new post
 router.get("/", getPosts);                  // Get all posts
-router.put("/:id", updatePost);             // Update a post by ID
-router.delete("/:id", deletePost);          // Delete a post by ID
+router.put("/:id", authMiddleware, updatePost);             // Update a post by ID
+router.delete("/:id", authMiddleware, deletePost);          // Delete a post by ID
 
 export default router;

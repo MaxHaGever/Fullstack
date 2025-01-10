@@ -15,12 +15,14 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const mongoose_1 = __importDefault(require("mongoose"));
 const supertest_1 = __importDefault(require("supertest"));
 const app_1 = __importDefault(require("../app"));
+const user_model_1 = __importDefault(require("../models/user_model"));
 beforeAll(() => __awaiter(void 0, void 0, void 0, function* () {
     const dbURI = process.env.dbURI;
     if (!dbURI) {
         throw new Error("Database connection string (dbURI) is not defined");
     }
     yield mongoose_1.default.connect(dbURI);
+    yield user_model_1.default.deleteMany();
 }));
 afterAll(() => __awaiter(void 0, void 0, void 0, function* () {
     yield mongoose_1.default.disconnect();
@@ -36,14 +38,14 @@ describe("Auth Tests", () => {
         expect(response.statusCode).toBe(200);
     }));
     test("Auth Login", () => __awaiter(void 0, void 0, void 0, function* () {
-        const loginResponse = yield (0, supertest_1.default)(app_1.default).post("/auth/login").send(userInfo); // Send userInfo directly
-        console.log(loginResponse.body); // Debugging response body
+        const loginResponse = yield (0, supertest_1.default)(app_1.default).post("/auth/login").send(userInfo);
+        console.log("Login Response Status:", loginResponse.statusCode);
+        console.log("Login Response Body:", loginResponse.body);
         expect(loginResponse.statusCode).toBe(200);
-        const token = loginResponse.body.token; // Access token from response body
+        const token = loginResponse.body.token;
         expect(token).toBeDefined();
-        const userId = loginResponse.body._id; // Access _id from response body
+        const userId = loginResponse.body._id;
         expect(userId).toBeDefined();
-        // Save the token and _id to the userInfo object
         userInfo.token = token;
         userInfo._id = userId;
     }));

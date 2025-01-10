@@ -9,7 +9,7 @@ const router = express_1.default.Router();
 router.post("/register", (req, res) => {
     auth_controller_1.default.register(req, res);
 });
-router.get("/login", (req, res) => {
+router.post("/login", (req, res) => {
     auth_controller_1.default.login(req, res);
 });
 exports.default = router;
