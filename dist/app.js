@@ -26,7 +26,7 @@ const options = {
     },
     apis: ["./src/routes/*.ts"],
 };
-const specs = (0, swagger_jsdoc_1.default)(options); // Corrected spelling from `spects` to `specs`
+const specs = (0, swagger_jsdoc_1.default)(options);
 app.use("/api-docs", swagger_ui_express_1.default.serve, swagger_ui_express_1.default.setup(specs));
 dotenv_1.default.config();
 const dbURI = process.env.dbURI;

@@ -14,36 +14,54 @@ const register = async (req: Request, res: Response) => {
     const email = req.body.email;
     const password = req.body.password;
 
-    console.log("Register Request Body:", req.body); // Debug incoming request
-
     if (!email || !password) {
         res.status(400).send("Missing email or password");
         return;
     }
 
     try {
-        const existingUser = await Users.findOne({ email }); // Check if email already exists
+        const existingUser = await Users.findOne({ email });
         if (existingUser) {
-            console.log("Registration Failed: Email already exists"); // Debug duplicate registration
             res.status(400).send("Email already registered");
             return;
         }
 
         const salt = await bcrypt.genSalt(10);
-        console.log("Salt generated for password:", salt); // Debug salt generation
-
         const hashPassword = await bcrypt.hash(password, salt);
-        console.log("Hashed Password:", hashPassword); // Debug hashed password
 
         const user = await Users.create({
-            email: email,
+            email,
             password: hashPassword,
         });
-        res.status(200).send(user);
+
+        const accessToken = jwt.sign(
+            { _id: user._id },
+            process.env.TOKEN_SECRET!,
+            { expiresIn: process.env.TOKEN_EXPIRATION || "1h" }
+        );
+
+        const refreshToken = jwt.sign(
+            { _id: user._id },
+            process.env.TOKEN_SECRET!,
+            { expiresIn: process.env.REFRESH_TOKEN_EXPIRATION || "1d" }
+        );
+
+        user.refreshTokens = [refreshToken];
+        await user.save();
+
+        res.status(200).send({
+            user: {
+                email: user.email,
+                _id: user._id,
+            },
+            accessToken,
+            refreshToken,
+        });
     } catch (err) {
         res.status(400).send(err);
     }
 };
+
 
 
 const login = async (req: Request, res: Response) => {

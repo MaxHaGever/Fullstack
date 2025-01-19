@@ -21,27 +21,34 @@ dotenv_1.default.config();
 const register = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const email = req.body.email;
     const password = req.body.password;
-    console.log("Register Request Body:", req.body); // Debug incoming request
     if (!email || !password) {
         res.status(400).send("Missing email or password");
         return;
     }
     try {
-        const existingUser = yield user_model_1.default.findOne({ email }); // Check if email already exists
+        const existingUser = yield user_model_1.default.findOne({ email });
         if (existingUser) {
-            console.log("Registration Failed: Email already exists"); // Debug duplicate registration
             res.status(400).send("Email already registered");
             return;
         }
         const salt = yield bcrypt_1.default.genSalt(10);
-        console.log("Salt generated for password:", salt); // Debug salt generation
         const hashPassword = yield bcrypt_1.default.hash(password, salt);
-        console.log("Hashed Password:", hashPassword); // Debug hashed password
         const user = yield user_model_1.default.create({
-            email: email,
+            email,
             password: hashPassword,
         });
-        res.status(200).send(user);
+        const accessToken = jsonwebtoken_1.default.sign({ _id: user._id }, process.env.TOKEN_SECRET, { expiresIn: process.env.TOKEN_EXPIRATION || "1h" });
+        const refreshToken = jsonwebtoken_1.default.sign({ _id: user._id }, process.env.TOKEN_SECRET, { expiresIn: process.env.REFRESH_TOKEN_EXPIRATION || "1d" });
+        user.refreshTokens = [refreshToken];
+        yield user.save();
+        res.status(200).send({
+            user: {
+                email: user.email,
+                _id: user._id,
+            },
+            accessToken,
+            refreshToken,
+        });
     }
     catch (err) {
         res.status(400).send(err);
