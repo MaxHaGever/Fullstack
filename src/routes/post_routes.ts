@@ -13,6 +13,35 @@ const router: Router = express.Router();
 
 /**
  * @swagger
+ * components:
+ *   securitySchemes:
+ *     bearerAuth:
+ *       type: http
+ *       scheme: bearer
+ *       bearerFormat: JWT
+ *   schemas:
+ *     Post:
+ *       type: object
+ *       required:
+ *         - title
+ *         - content
+ *       properties:
+ *         title:
+ *           type: string
+ *           example: "Post Title"
+ *         content:
+ *           type: string
+ *           example: "Post Content"
+ *         sender:
+ *           type: string
+ *           example: "60d5ec9b6f4b3b0015f3f7b3"
+ *         _id:
+ *           type: string
+ *           example: "60d5ec9b6f4b3b0015f3f7b4"
+ */
+
+/**
+ * @swagger
  * tags:
  *   name: Posts
  *   description: The Posts API
@@ -36,36 +65,23 @@ const router: Router = express.Router();
  *               title:
  *                 type: string
  *                 description: Title of the post
- *                 example: My First Post
+ *                 example: "My First Post"
  *               content:
  *                 type: string
  *                 description: Content of the post
- *                 example: This is the content of my first post
+ *                 example: "This is the content of my first post"
  *     responses:
- *       200:
+ *       201:
  *         description: Post added successfully
  *         content:
  *           application/json:
  *             schema:
- *               type: object
- *               properties:
- *                 title:
- *                   type: string
- *                   example: My First Post
- *                 content:
- *                   type: string
- *                   example: This is the content of my first post
- *                 owner:
- *                   type: string
- *                   example: 60d5ec9b6f4b3b0015f3f7b3
- *                 _id:
- *                   type: string
- *                   example: 60d5ec9b6f4b3b0015f3f7b4
+ *               $ref: '#/components/schemas/Post'
  *       401:
  *         description: Unauthorized access
  */
-
 router.post("/", authMiddleware, createPost);
+
 /**
  * @swagger
  * /posts:
@@ -81,16 +97,22 @@ router.post("/", authMiddleware, createPost);
  *               type: array
  *               items:
  *                 $ref: '#/components/schemas/Post'
- *       401:
- *         description: Unauthorized access
  */
 router.get("/", getPosts);
+
 /**
  * @swagger
  * /posts/by-sender:
  *   get:
  *     summary: Retrieves posts by sender
  *     tags: [Posts]
+ *     parameters:
+ *       - in: query
+ *         name: sender
+ *         schema:
+ *           type: string
+ *         required: true
+ *         description: The ID of the sender to filter posts
  *     responses:
  *       200:
  *         description: A list of posts by the sender
@@ -100,10 +122,11 @@ router.get("/", getPosts);
  *               type: array
  *               items:
  *                 $ref: '#/components/schemas/Post'
- *       401:
- *         description: Unauthorized access
+ *       400:
+ *         description: Missing or invalid sender ID
  */
 router.get("/by-sender", getPostsBySender);
+
 /**
  * @swagger
  * /posts/{id}:
@@ -124,17 +147,18 @@ router.get("/by-sender", getPostsBySender);
  *           application/json:
  *             schema:
  *               $ref: '#/components/schemas/Post'
- *       401:
- *         description: Unauthorized access
  *       404:
  *         description: Post not found
  */
 router.get("/:id", getPostById);
+
 /**
  * @swagger
  * /posts/{id}:
  *   put:
  *     summary: Updates a post by ID
+ *     security:
+ *       - bearerAuth: []
  *     tags: [Posts]
  *     parameters:
  *       - in: path
@@ -148,7 +172,14 @@ router.get("/:id", getPostById);
  *       content:
  *         application/json:
  *           schema:
- *             $ref: '#/components/schemas/Post'
+ *             type: object
+ *             properties:
+ *               title:
+ *                 type: string
+ *                 example: "Updated Post Title"
+ *               content:
+ *                 type: string
+ *                 example: "Updated Post Content"
  *     responses:
  *       200:
  *         description: The updated post
@@ -162,11 +193,14 @@ router.get("/:id", getPostById);
  *         description: Post not found
  */
 router.put("/:id", authMiddleware, updatePost);
+
 /**
  * @swagger
  * /posts/{id}:
  *   delete:
  *     summary: Deletes a post by ID
+ *     security:
+ *       - bearerAuth: []
  *     tags: [Posts]
  *     parameters:
  *       - in: path
@@ -185,7 +219,7 @@ router.put("/:id", authMiddleware, updatePost);
  *               properties:
  *                 message:
  *                   type: string
- *                   example: Post deleted successfully
+ *                   example: "Post deleted successfully"
  *       401:
  *         description: Unauthorized access
  *       404:

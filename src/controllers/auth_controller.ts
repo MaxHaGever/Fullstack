@@ -237,32 +237,29 @@ export const authMiddleware = (req: Request, res: Response, next: NextFunction) 
     const authHeader = req.headers["authorization"];
     const token = authHeader && authHeader.split(" ")[1];
 
-    console.log("Authorization Header:", authHeader); // Debug authorization header
-    console.log("Extracted Token:", token); // Debug token
+    console.log("Authorization Header:", authHeader); // Debug log
+    console.log("Extracted Token:", token);          // Debug log
 
     if (!token) {
-        res.status(401).send("Missing token");
+        res.status(401).json({ error: "Missing token" });
         return;
     }
 
     if (!process.env.TOKEN_SECRET) {
-        res.status(400).send("Missing token secret");
+        res.status(500).json({ error: "Server misconfiguration: Missing token secret" });
         return;
     }
 
     jwt.verify(token, process.env.TOKEN_SECRET, (err, payload) => {
         if (err) {
-            console.error("Token verification failed:", err); // Debug verification error
-            res.status(403).send("Invalid token");
+            console.error("Token verification failed:", err); // Debug log
+            res.status(403).json({ error: "Invalid token" });
             return;
         }
 
-        console.log("Token verified successfully"); // Debug token verification success
-
-        // Assert payload is of type CustomJwtPayload
+        console.log("Token verified successfully"); // Debug log
         const decodedPayload = payload as CustomJwtPayload;
-
-        req.query.userId = decodedPayload._id; // Now TypeScript recognizes _id
+        req.query.userId = decodedPayload._id;
         next();
     });
 };

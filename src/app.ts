@@ -2,7 +2,6 @@ import dotenv from "dotenv";
 import express, { Application } from "express";
 import bodyParser from "body-parser";
 import mongoose from "mongoose";
-import studentRoutes from "./routes/student_routes";
 import postRoutes from "./routes/post_routes"; // Import Post routes
 import commentRoutes from "./routes/comment_routes"; // Import Comment routes
 import authRoutes from "./routes/auth_routes"
@@ -40,7 +39,6 @@ if (!dbURI) {
 
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
-app.use("/students", studentRoutes);
 app.use("/posts", postRoutes);
 app.use("/comments", commentRoutes);
 app.use("/auth", authRoutes); 

@@ -7,7 +7,6 @@ const dotenv_1 = __importDefault(require("dotenv"));
 const express_1 = __importDefault(require("express"));
 const body_parser_1 = __importDefault(require("body-parser"));
 const mongoose_1 = __importDefault(require("mongoose"));
-const student_routes_1 = __importDefault(require("./routes/student_routes"));
 const post_routes_1 = __importDefault(require("./routes/post_routes")); // Import Post routes
 const comment_routes_1 = __importDefault(require("./routes/comment_routes")); // Import Comment routes
 const auth_routes_1 = __importDefault(require("./routes/auth_routes"));
@@ -35,7 +34,6 @@ if (!dbURI) {
 }
 app.use(body_parser_1.default.json());
 app.use(body_parser_1.default.urlencoded({ extended: true }));
-app.use("/students", student_routes_1.default);
 app.use("/posts", post_routes_1.default);
 app.use("/comments", comment_routes_1.default);
 app.use("/auth", auth_routes_1.default);
