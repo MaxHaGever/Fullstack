@@ -128,30 +128,33 @@ describe("Auth Tests", () => {
         expect(refreshResponse.statusCode).not.toBe(200);
     }));
     test("Refresh token multiple usage", () => __awaiter(void 0, void 0, void 0, function* () {
-        // Step 1: Login to get initial tokens
         const loginResponse = yield (0, supertest_1.default)(app_1.default)
             .post("/auth/login")
             .send({ email: userInfo.email, password: userInfo.password });
         expect(loginResponse.statusCode).toBe(200);
         expect(loginResponse.body.refreshToken).toBeDefined();
         const initialRefreshToken = loginResponse.body.refreshToken;
-        // Step 2: Use the refresh token for the first time
         const firstRefreshResponse = yield (0, supertest_1.default)(app_1.default)
             .post("/auth/refresh")
             .send({ refreshToken: initialRefreshToken });
         expect(firstRefreshResponse.statusCode).toBe(200);
         expect(firstRefreshResponse.body.refreshToken).toBeDefined();
         const newRefreshToken = firstRefreshResponse.body.refreshToken;
-        // Step 3: Attempt to reuse the old refresh token
         const reusedTokenResponse = yield (0, supertest_1.default)(app_1.default)
             .post("/auth/refresh")
             .send({ refreshToken: initialRefreshToken });
-        expect(reusedTokenResponse.statusCode).toBe(400); // Should fail as the token is invalidated
-        // Step 4: Use the new refresh token
+        expect(reusedTokenResponse.statusCode).toBe(400);
         const secondRefreshResponse = yield (0, supertest_1.default)(app_1.default)
             .post("/auth/refresh")
             .send({ refreshToken: newRefreshToken });
         expect(secondRefreshResponse.statusCode).toBe(200);
+    }));
+    test("Timeout on refresh access token", () => __awaiter(void 0, void 0, void 0, function* () {
+        const loginResponse = yield (0, supertest_1.default)(app_1.default)
+            .post("/auth/login")
+            .send({ email: userInfo.email, password: userInfo.password });
+        expect(loginResponse.statusCode).toBe(200);
+        expect(loginResponse.body.refreshToken).toBeDefined();
     }));
 });
 //# sourceMappingURL=auth.test.js.map

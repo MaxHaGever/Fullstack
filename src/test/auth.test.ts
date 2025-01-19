@@ -144,7 +144,6 @@ describe("Auth Tests", () => {
     
 
     test("Refresh token multiple usage", async () => {
-        // Step 1: Login to get initial tokens
         const loginResponse = await request(app)
             .post("/auth/login")
             .send({ email: userInfo.email, password: userInfo.password });
@@ -152,8 +151,6 @@ describe("Auth Tests", () => {
         expect(loginResponse.body.refreshToken).toBeDefined();
     
         const initialRefreshToken = loginResponse.body.refreshToken;
-    
-        // Step 2: Use the refresh token for the first time
         const firstRefreshResponse = await request(app)
             .post("/auth/refresh")
             .send({ refreshToken: initialRefreshToken });
@@ -161,20 +158,24 @@ describe("Auth Tests", () => {
         expect(firstRefreshResponse.body.refreshToken).toBeDefined();
     
         const newRefreshToken = firstRefreshResponse.body.refreshToken;
-    
-        // Step 3: Attempt to reuse the old refresh token
         const reusedTokenResponse = await request(app)
             .post("/auth/refresh")
             .send({ refreshToken: initialRefreshToken });
-        expect(reusedTokenResponse.statusCode).toBe(400); // Should fail as the token is invalidated
+        expect(reusedTokenResponse.statusCode).toBe(400);
     
-        // Step 4: Use the new refresh token
         const secondRefreshResponse = await request(app)
             .post("/auth/refresh")
             .send({ refreshToken: newRefreshToken });
         expect(secondRefreshResponse.statusCode).toBe(200);
     });
+
+    test("Timeout on refresh access token", async () => {
+        const loginResponse = await request(app)
+            .post("/auth/login")
+            .send({ email: userInfo.email, password: userInfo.password });
+        expect(loginResponse.statusCode).toBe(200);
+        expect(loginResponse.body.refreshToken).toBeDefined();
     
-    
+});
     
 });

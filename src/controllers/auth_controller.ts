@@ -127,28 +127,19 @@ const logout = async (req: Request, res: Response) => {
 
     try {
         const decoded = jwt.verify(refreshToken, process.env.TOKEN_SECRET) as CustomJwtPayload;
-        console.log("Decoded refresh token payload:", decoded);
-
         const user = await Users.findOne({ _id: decoded._id });
-        console.log("User found for logout:", user);
-
         if (!user) {
-            console.log("User not found for given token payload");
             res.status(400).send("User not found");
             return;
         }
 
         if (!user.refreshTokens || !user.refreshTokens.includes(refreshToken)) {
-            console.log("Invalid refresh token. Current tokens:", user.refreshTokens);
             res.status(400).send("Invalid refresh token");
             return;
         }
 
         user.refreshTokens = user.refreshTokens.filter((token) => token !== refreshToken);
-        console.log("Updated refresh tokens after removal:", user.refreshTokens);
-
         await user.save();
-        console.log("User successfully logged out");
         res.status(200).send("Logged out successfully");
     } catch (err) {
         console.error("Error during logout:", err);

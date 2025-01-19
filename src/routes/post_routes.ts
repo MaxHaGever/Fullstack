@@ -1,5 +1,5 @@
 import express, { Router } from "express";
-import {authMiddleware} from "../controllers/auth_controller"
+import { authMiddleware } from "../controllers/auth_controller";
 import {
     createPost,
     getPosts,
@@ -11,16 +11,66 @@ import {
 
 const router: Router = express.Router();
 
-// Specific routes should come first
-router.get("/by-sender", getPostsBySender); // Get posts by sender
-router.get("/:id", getPostById);            // Get a post by ID
-router.post("/", authMiddleware, (req, res, next) => {
-    console.log("Request Body for Create Post:", req.body); // Debug request body
-    next();
-}, createPost);
+/**
+ * @swagger
+ * tags:
+ *   name: Posts
+ *   description: The Posts API
+ */
 
-router.get("/", getPosts);                  // Get all posts
-router.put("/:id", authMiddleware, updatePost);             // Update a post by ID
-router.delete("/:id", authMiddleware, deletePost);          // Delete a post by ID
+/**
+ * @swagger
+ * /posts:
+ *   post:
+ *     summary: Add a new post
+ *     security:
+ *       - bearerAuth: []
+ *     tags: [Posts]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               title:
+ *                 type: string
+ *                 description: Title of the post
+ *                 example: My First Post
+ *               content:
+ *                 type: string
+ *                 description: Content of the post
+ *                 example: This is the content of my first post
+ *     responses:
+ *       200:
+ *         description: Post added successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 title:
+ *                   type: string
+ *                   example: My First Post
+ *                 content:
+ *                   type: string
+ *                   example: This is the content of my first post
+ *                 owner:
+ *                   type: string
+ *                   example: 60d5ec9b6f4b3b0015f3f7b3
+ *                 _id:
+ *                   type: string
+ *                   example: 60d5ec9b6f4b3b0015f3f7b4
+ *       401:
+ *         description: Unauthorized access
+ */
+
+router.post("/", authMiddleware, createPost);
+
+router.get("/", getPosts);
+router.get("/by-sender", getPostsBySender);
+router.get("/:id", getPostById);
+router.put("/:id", authMiddleware, updatePost);
+router.delete("/:id", authMiddleware, deletePost);
 
 export default router;
