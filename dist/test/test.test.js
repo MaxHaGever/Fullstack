@@ -22,35 +22,22 @@ const userInfo = {
     email: "maxspectorr@gmail.com",
     password: "123456",
 };
-// Initialize the database connection and clean up before tests
 beforeAll(() => __awaiter(void 0, void 0, void 0, function* () {
     const dbURI = process.env.dbURI;
     if (!dbURI) {
         throw new Error("Database connection string (dbURI) is not defined");
     }
-    // Connect to MongoDB
-    console.log("Connecting to MongoDB...");
     yield mongoose_1.default.connect(dbURI);
-    console.log("MongoDB connected");
-    // Clean the database
-    console.log("Cleaning database...");
     yield post_1.default.deleteMany();
     yield comment_1.default.deleteMany();
     yield user_model_1.default.deleteMany();
-    // Register and login the test user
-    console.log("Registering test user...");
     yield (0, supertest_1.default)(app_1.default).post("/auth/register").send(userInfo);
-    console.log("Logging in test user...");
     const response = yield (0, supertest_1.default)(app_1.default).post("/auth/login").send(userInfo);
     userInfo.token = response.body.token;
     userInfo._id = response.body._id;
-    console.log("User authenticated:", userInfo);
 }));
-// Close the database connection after all tests
 afterAll(() => __awaiter(void 0, void 0, void 0, function* () {
-    console.log("Disconnecting from MongoDB...");
     yield mongoose_1.default.connection.close();
-    console.log("MongoDB disconnected");
 }));
 // Tests for Post and Comment APIs
 describe("Post and Comment API Tests", () => {

@@ -13,6 +13,10 @@ const userSchema = new Schema({
     password: {
         type: String,
         require: true
+    },
+    refreshTokens: {
+        type: [String],
+        default: []
     }
 });
 const Users = mongoose_1.default.model("Users", userSchema);

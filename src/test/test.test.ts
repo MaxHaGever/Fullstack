@@ -16,41 +16,25 @@ const userInfo: UserInfo = {
     email: "maxspectorr@gmail.com",
     password: "123456",
 };
-
-// Initialize the database connection and clean up before tests
 beforeAll(async () => {
     const dbURI = process.env.dbURI;
     if (!dbURI) {
         throw new Error("Database connection string (dbURI) is not defined");
     }
-
-    // Connect to MongoDB
-    console.log("Connecting to MongoDB...");
     await mongoose.connect(dbURI);
-    console.log("MongoDB connected");
-
-    // Clean the database
-    console.log("Cleaning database...");
     await Post.deleteMany();
     await Comment.deleteMany();
     await userModel.deleteMany();
 
-    // Register and login the test user
-    console.log("Registering test user...");
     await request(app).post("/auth/register").send(userInfo);
 
-    console.log("Logging in test user...");
     const response = await request(app).post("/auth/login").send(userInfo);
     userInfo.token = response.body.token;
     userInfo._id = response.body._id;
-    console.log("User authenticated:", userInfo);
 });
 
-// Close the database connection after all tests
 afterAll(async () => {
-    console.log("Disconnecting from MongoDB...");
     await mongoose.connection.close();
-    console.log("MongoDB disconnected");
 });
 
 // Tests for Post and Comment APIs

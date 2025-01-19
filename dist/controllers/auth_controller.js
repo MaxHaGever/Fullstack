@@ -69,12 +69,23 @@ const login = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
             res.status(500).send("Missing Token Secret");
             return;
         }
-        const token = jsonwebtoken_1.default.sign({ _id: user._id }, process.env.TOKEN_SECRET, { expiresIn: process.env.TOKEN_EXPIRATION || "1h" });
-        console.log("Generated Token:", token);
+        const random = Math.floor(Math.random() * 1000000000) + 1;
+        const accessToken = jsonwebtoken_1.default.sign({ _id: user._id,
+            random: random
+        }, process.env.TOKEN_SECRET, { expiresIn: process.env.TOKEN_EXPIRATION || "1h" });
+        const refreshToken = jsonwebtoken_1.default.sign({ _id: user._id,
+            random: random
+        }, process.env.TOKEN_SECRET, { expiresIn: process.env.REFRESH_TOKEN_EXPIRATION || "1d" });
+        if (user.refreshTokens == null) {
+            user.refreshTokens = [];
+        }
+        user.refreshTokens.push(refreshToken);
+        yield user.save();
         res.status(200).send({
             email: user.email,
             _id: user._id,
-            token,
+            accessToken: accessToken,
+            refreshToken: refreshToken,
         });
     }
     catch (err) {
@@ -83,17 +94,87 @@ const login = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     }
 });
 const logout = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    res.clearCookie("token");
-    res.status(200).send("Logged out successfully");
+    const refreshToken = req.body.refreshToken;
+    console.log("Logout request received with refresh token:", refreshToken);
+    if (!refreshToken) {
+        console.log("Missing refresh token in request body");
+        res.status(400).send("Missing refresh token");
+        return;
+    }
+    if (!process.env.TOKEN_SECRET) {
+        console.log("Missing TOKEN_SECRET");
+        res.status(500).send("Missing token secret");
+        return;
+    }
+    try {
+        const decoded = jsonwebtoken_1.default.verify(refreshToken, process.env.TOKEN_SECRET);
+        console.log("Decoded refresh token payload:", decoded);
+        const user = yield user_model_1.default.findOne({ _id: decoded._id });
+        console.log("User found for logout:", user);
+        if (!user) {
+            console.log("User not found for given token payload");
+            res.status(400).send("User not found");
+            return;
+        }
+        if (!user.refreshTokens || !user.refreshTokens.includes(refreshToken)) {
+            console.log("Invalid refresh token. Current tokens:", user.refreshTokens);
+            res.status(400).send("Invalid refresh token");
+            return;
+        }
+        user.refreshTokens = user.refreshTokens.filter((token) => token !== refreshToken);
+        console.log("Updated refresh tokens after removal:", user.refreshTokens);
+        yield user.save();
+        console.log("User successfully logged out");
+        res.status(200).send("Logged out successfully");
+    }
+    catch (err) {
+        console.error("Error during logout:", err);
+        res.status(403).send("Invalid refresh token");
+    }
 });
 const refresh = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const refreshToken = req.body.refreshToken;
+    console.log("Received refresh token:", refreshToken); // Debug input token
+    if (!refreshToken) {
+        res.status(400).send("Missing refresh token");
+        return;
+    }
     if (!process.env.TOKEN_SECRET) {
         res.status(500).send("Missing token secret");
         return;
     }
-    const token = jsonwebtoken_1.default.sign({ _id: req.query.userId }, process.env.TOKEN_SECRET, { expiresIn: process.env.TOKEN_EXPIRATION || "1h" });
-    console.log("Refreshed Token:", token);
-    res.status(200).send({ token });
+    try {
+        const decoded = jsonwebtoken_1.default.verify(refreshToken, process.env.TOKEN_SECRET);
+        console.log("Decoded payload:", decoded); // Debug decoded payload
+        const user = yield user_model_1.default.findOne({ _id: decoded._id });
+        if (!user) {
+            res.status(400).send("User not found");
+            return;
+        }
+        console.log("User's current refresh tokens:", user.refreshTokens); // Debug user's refresh tokens
+        if (!user.refreshTokens || !user.refreshTokens.includes(refreshToken)) {
+            console.log("Invalid or reused refresh token");
+            res.status(400).send("Invalid refresh token");
+            return;
+        }
+        // Remove the current refresh token
+        user.refreshTokens = user.refreshTokens.filter((token) => token !== refreshToken);
+        console.log("Updated refresh tokens after removal:", user.refreshTokens); // Debug token removal
+        // Generate new tokens
+        const newAccessToken = jsonwebtoken_1.default.sign({ _id: user._id }, process.env.TOKEN_SECRET, { expiresIn: process.env.TOKEN_EXPIRATION || "1h" });
+        const newRefreshToken = jsonwebtoken_1.default.sign({ _id: user._id }, process.env.TOKEN_SECRET, { expiresIn: process.env.REFRESH_TOKEN_EXPIRATION || "1d" });
+        user.refreshTokens.push(newRefreshToken);
+        console.log("New refresh token added:", newRefreshToken); // Debug new refresh token
+        yield user.save();
+        res.status(200).send({
+            accessToken: newAccessToken,
+            refreshToken: newRefreshToken,
+        });
+    }
+    catch (err) {
+        console.error("Error in refresh endpoint:", err); // Debug any errors
+        res.status(403).send("Invalid or expired refresh token");
+    }
 });
 const authMiddleware = (req, res, next) => {
     const authHeader = req.headers["authorization"];
