@@ -25,7 +25,8 @@ const register = async (req: Request, res: Response) => {
         const existingUser = await Users.findOne({ email }); // Check if email already exists
         if (existingUser) {
             console.log("Registration Failed: Email already exists"); // Debug duplicate registration
-            return res.status(400).send("Email already registered");
+            res.status(400).send("Email already registered");
+            return;
         }
 
         const salt = await bcrypt.genSalt(10);
@@ -38,12 +39,9 @@ const register = async (req: Request, res: Response) => {
             email: email,
             password: hashPassword,
         });
-
-        console.log("User Created:", user); // Debug created user
-        return res.status(200).send(user);
+        res.status(200).send(user);
     } catch (err) {
-        console.error("Error during registration:", err); // Debug errors
-        return res.status(400).send(err);
+        res.status(400).send(err);
     }
 };
 
@@ -53,41 +51,73 @@ const login = async (req: Request, res: Response) => {
     const password = req.body.password;
 
     if (!email || !password) {
-        return res.status(400).send("Missing email or password");
+        res.status(400).send("Missing email or password");
+        return;
     }
 
     try {
         const user = await Users.findOne({ email });
         if (!user) {
-            return res.status(400).send("User not found");
+            res.status(400).send("User not found");
+            return;
         }
 
         const validPassword = await bcrypt.compare(password, user.password);
         if (!validPassword) {
-            return res.status(400).send("Invalid email or password");
+            res.status(400).send("Invalid email or password");
+            return;
         }
 
         if (!process.env.TOKEN_SECRET) {
-            return res.status(500).send("Missing Token Secret");
+            res.status(500).send("Missing Token Secret");
+            return;
         }
 
-        const token = jwt.sign(
+        const accessToken = jwt.sign(
             { _id: user._id },
             process.env.TOKEN_SECRET,
             { expiresIn: process.env.TOKEN_EXPIRATION || "1h" }
         );
 
-        console.log("Generated Token:", token);
+        const refreshToken = jwt.sign(
+            { _id: user._id },
+            process.env.TOKEN_SECRET,
+            { expiresIn: process.env.REFRESH_TOKEN_EXPIRATION || "1d" } 
+        );
 
-        return res.status(200).send({
+         res.status(200).send({
             email: user.email,
             _id: user._id,
-            token,
+            accessToken: accessToken,
+            refreshToken: refreshToken,
         });
     } catch (err) {
         console.error("Error in login:", err);
-        return res.status(500).send(err);
+        res.status(500).send(err);
+        
     }
+};
+
+const logout = async (req: Request, res: Response) => {
+    res.clearCookie("token");
+    res.status(200).send("Logged out successfully");
+};
+
+const refresh = async (req: Request, res: Response) => {
+    if (!process.env.TOKEN_SECRET) {
+        res.status(500).send("Missing token secret");
+        return;
+    }
+
+    const token = jwt.sign(
+        { _id: req.query.userId },
+        process.env.TOKEN_SECRET,
+        { expiresIn: process.env.TOKEN_EXPIRATION || "1h" }
+    );
+
+    console.log("Refreshed Token:", token);
+
+    res.status(200).send({ token });
 };
 
 export const authMiddleware = (req: Request, res: Response, next: NextFunction) => {
@@ -127,4 +157,4 @@ export const authMiddleware = (req: Request, res: Response, next: NextFunction) 
 
 
 
-export default {register,login};
+export default {register,login, logout, refresh};

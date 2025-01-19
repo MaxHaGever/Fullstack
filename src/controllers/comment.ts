@@ -4,13 +4,27 @@ import Comment from "../models/comment"
 // Create a comment
 export const createComment = async (req: Request, res: Response): Promise<void> => {
     try {
-        const comment = new Comment(req.body);
+        const { postId, text } = req.body;
+        const sender = req.query.userId as string;
+
+        console.log("Incoming comment data:", { postId, text, sender }); // Debug log
+
+        if (!postId || !text || !sender) {
+            console.error("Missing required fields:", { postId, text, sender }); // Debug log
+            res.status(400).send("Missing required fields: postId, text, or sender");
+            return;
+        }
+
+        const comment = new Comment({ postId, text, sender });
         await comment.save();
         res.status(201).send(comment);
     } catch (err) {
-        res.status(400).send(err);
+        console.error("Error creating comment:", err); // Debug log
+        res.status(500).send("Internal Server Error");
     }
 };
+
+
 
 // Get all comments
 export const getComments = async (req: Request, res: Response): Promise<void> => {

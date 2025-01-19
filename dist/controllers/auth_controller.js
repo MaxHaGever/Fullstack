@@ -30,7 +30,8 @@ const register = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
         const existingUser = yield user_model_1.default.findOne({ email }); // Check if email already exists
         if (existingUser) {
             console.log("Registration Failed: Email already exists"); // Debug duplicate registration
-            return res.status(400).send("Email already registered");
+            res.status(400).send("Email already registered");
+            return;
         }
         const salt = yield bcrypt_1.default.genSalt(10);
         console.log("Salt generated for password:", salt); // Debug salt generation
@@ -40,35 +41,37 @@ const register = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
             email: email,
             password: hashPassword,
         });
-        console.log("User Created:", user); // Debug created user
-        return res.status(200).send(user);
+        res.status(200).send(user);
     }
     catch (err) {
-        console.error("Error during registration:", err); // Debug errors
-        return res.status(400).send(err);
+        res.status(400).send(err);
     }
 });
 const login = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const email = req.body.email;
     const password = req.body.password;
     if (!email || !password) {
-        return res.status(400).send("Missing email or password");
+        res.status(400).send("Missing email or password");
+        return;
     }
     try {
         const user = yield user_model_1.default.findOne({ email });
         if (!user) {
-            return res.status(400).send("User not found");
+            res.status(400).send("User not found");
+            return;
         }
         const validPassword = yield bcrypt_1.default.compare(password, user.password);
         if (!validPassword) {
-            return res.status(400).send("Invalid email or password");
+            res.status(400).send("Invalid email or password");
+            return;
         }
         if (!process.env.TOKEN_SECRET) {
-            return res.status(500).send("Missing Token Secret");
+            res.status(500).send("Missing Token Secret");
+            return;
         }
         const token = jsonwebtoken_1.default.sign({ _id: user._id }, process.env.TOKEN_SECRET, { expiresIn: process.env.TOKEN_EXPIRATION || "1h" });
         console.log("Generated Token:", token);
-        return res.status(200).send({
+        res.status(200).send({
             email: user.email,
             _id: user._id,
             token,
@@ -76,8 +79,21 @@ const login = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     }
     catch (err) {
         console.error("Error in login:", err);
-        return res.status(500).send(err);
+        res.status(500).send(err);
     }
+});
+const logout = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    res.clearCookie("token");
+    res.status(200).send("Logged out successfully");
+});
+const refresh = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    if (!process.env.TOKEN_SECRET) {
+        res.status(500).send("Missing token secret");
+        return;
+    }
+    const token = jsonwebtoken_1.default.sign({ _id: req.query.userId }, process.env.TOKEN_SECRET, { expiresIn: process.env.TOKEN_EXPIRATION || "1h" });
+    console.log("Refreshed Token:", token);
+    res.status(200).send({ token });
 });
 const authMiddleware = (req, res, next) => {
     const authHeader = req.headers["authorization"];
@@ -106,5 +122,5 @@ const authMiddleware = (req, res, next) => {
     });
 };
 exports.authMiddleware = authMiddleware;
-exports.default = { register, login };
+exports.default = { register, login, logout, refresh };
 //# sourceMappingURL=auth_controller.js.map

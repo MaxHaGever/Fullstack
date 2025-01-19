@@ -22,7 +22,8 @@ afterAll(async () => {
 type UserInfo = {
     email: string;
     password: string;
-    token?: string;
+    accessToken?: string;
+    refreshToken?: string;
     _id?: string;
 };
 
@@ -44,21 +45,19 @@ describe("Auth Tests", () => {
     
     test("Auth Login", async () => {
         const loginResponse = await request(app).post("/auth/login").send(userInfo);
-        console.log("Login Response Status:", loginResponse.statusCode); // Debug status code
-        console.log("Login Response Body:", loginResponse.body); // Debug response body
-    
+   
         expect(loginResponse.statusCode).toBe(200);
     
-        const token = loginResponse.body.token;
-        expect(token).toBeDefined();
+        const accessToken = loginResponse.body.accessToken;
+        expect(accessToken).toBeDefined();
+        const refreshToken = loginResponse.body.refreshToken;
+        expect(refreshToken).toBeDefined();
     
         const userId = loginResponse.body._id;
         expect(userId).toBeDefined();
     
-        console.log("Token from Login:", token); // Debug token
-        console.log("User ID from Login:", userId); // Debug user ID
-    
-        userInfo.token = token;
+        userInfo.accessToken = accessToken;
+        userInfo.refreshToken = refreshToken;
         userInfo._id = userId;
     });
     
@@ -78,7 +77,7 @@ describe("Auth Tests", () => {
         // Second request: With Authorization
         const response2 = await request(app)
             .post("/posts")
-            .set("Authorization", `Bearer ${userInfo.token}`)
+            .set("Authorization", `Bearer ${userInfo.accessToken}`)
             .send({
                 sender: "invalid",
                 title: "My First Post",
@@ -93,7 +92,7 @@ describe("Auth Tests", () => {
         // First request: Without Authorization
         const response = await request(app)
             .post("/posts")
-            .set("Authorization", `Bearer ${userInfo.token+ '1'}`)
+            .set("Authorization", `Bearer ${userInfo.accessToken+ '1'}`)
             .send({
                 sender: userInfo._id,
                 title: "My First Post",
@@ -104,5 +103,39 @@ describe("Auth Tests", () => {
         expect(response.statusCode).not.toBe(201);
     });
 
+    test("Refresh token", async () => {
+        const refreshResponse = await request(app).post("/auth/refresh").send({ refreshToken: userInfo.refreshToken });
+        expect(refreshResponse.statusCode).toBe(200);
+        expect(refreshResponse.body.accessToken).toBeDefined();
+        expect(refreshResponse.body.refreshToken).toBeDefined(); 
+        userInfo.accessToken = refreshResponse.body.accessToken;
+        userInfo.refreshToken = refreshResponse.body.refreshToken;
+    });
 
+    test("Logout", async () => {
+        const logoutResponse = await request(app).post("/auth/logout").send({ refreshToken: userInfo.refreshToken });
+        expect(logoutResponse.statusCode).toBe(200);
+        const refreshResponse = await request(app).post("/auth/refresh").send({ refreshToken: userInfo.refreshToken });
+        expect(refreshResponse.statusCode).not.toBe(200);
+    });
+
+    test("Refresh tokenm multiuple usage", async () => {
+        //login - get refresh token
+        const refreshResponse = await request(app).post("/auth/login").send({ email: userInfo.email, password: userInfo.password });
+        expect(refreshResponse.statusCode).toBe(200);
+        expect(refreshResponse.body.accessToken).toBeDefined();
+        expect(refreshResponse.body.refreshToken).toBeDefined(); 
+        userInfo.accessToken = refreshResponse.body.accessToken;
+        userInfo.refreshToken = refreshResponse.body.refreshToken;
+        //first usage of token
+        const response2 = await request(app).post("/auth/refresh").send({ refreshToken: userInfo.refreshToken });
+        expect(response2.statusCode).toBe(200);
+        const newRefreshToken = response2.body.refreshToken;
+        //2nd usage of refresh token expectin to fail
+        const response3 = await request(app).post("/auth/refresh").send({ refreshToken: userInfo.refreshToken });   
+        expect(response3.statusCode).not.toBe(200);
+        //try the new refresh token expect to fail
+        const response4 = await request(app).post("/auth/refresh").send({ refreshToken: newRefreshToken });   
+        expect(response4.statusCode).not.toBe(200);
+    });
 });

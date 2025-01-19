@@ -4,8 +4,9 @@
   "description": "Matala1",
   "main": "app.js",
   "scripts": {
-    "test": "tsc && jest --detectOpenHandles --forceExit",
+    "test": "tsc && jest --detectOpenHandles --forceExit --runInBand",
     "testAuth": "tsc && jest --detectOpenHandles --forceExit auth.test.ts",
+    "testPosts": "tsc && jest --detectOpenHandles --forceExit test.test.ts",
     "dev": "nodemon ./src/server.ts",
     "start": "tsc && node ./dist/server.js",
     "lint": "eslint . --ext .ts"

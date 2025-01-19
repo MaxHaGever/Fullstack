@@ -17,12 +17,21 @@ const comment_1 = __importDefault(require("../models/comment"));
 // Create a comment
 const createComment = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        const comment = new comment_1.default(req.body);
+        const { postId, text } = req.body;
+        const sender = req.query.userId;
+        console.log("Incoming comment data:", { postId, text, sender }); // Debug log
+        if (!postId || !text || !sender) {
+            console.error("Missing required fields:", { postId, text, sender }); // Debug log
+            res.status(400).send("Missing required fields: postId, text, or sender");
+            return;
+        }
+        const comment = new comment_1.default({ postId, text, sender });
         yield comment.save();
         res.status(201).send(comment);
     }
     catch (err) {
-        res.status(400).send(err);
+        console.error("Error creating comment:", err); // Debug log
+        res.status(500).send("Internal Server Error");
     }
 });
 exports.createComment = createComment;

@@ -44,16 +44,15 @@ describe("Auth Tests", () => {
     }));
     test("Auth Login", () => __awaiter(void 0, void 0, void 0, function* () {
         const loginResponse = yield (0, supertest_1.default)(app_1.default).post("/auth/login").send(userInfo);
-        console.log("Login Response Status:", loginResponse.statusCode); // Debug status code
-        console.log("Login Response Body:", loginResponse.body); // Debug response body
         expect(loginResponse.statusCode).toBe(200);
-        const token = loginResponse.body.token;
-        expect(token).toBeDefined();
+        const accessToken = loginResponse.body.accessToken;
+        expect(accessToken).toBeDefined();
+        const refreshToken = loginResponse.body.refreshToken;
+        expect(refreshToken).toBeDefined();
         const userId = loginResponse.body._id;
         expect(userId).toBeDefined();
-        console.log("Token from Login:", token); // Debug token
-        console.log("User ID from Login:", userId); // Debug user ID
-        userInfo.token = token;
+        userInfo.accessToken = accessToken;
+        userInfo.refreshToken = refreshToken;
         userInfo._id = userId;
     }));
     test("Get protected API", () => __awaiter(void 0, void 0, void 0, function* () {
@@ -71,7 +70,7 @@ describe("Auth Tests", () => {
         // Second request: With Authorization
         const response2 = yield (0, supertest_1.default)(app_1.default)
             .post("/posts")
-            .set("Authorization", `Bearer ${userInfo.token}`)
+            .set("Authorization", `Bearer ${userInfo.accessToken}`)
             .send({
             sender: "invalid",
             title: "My First Post",
@@ -85,7 +84,7 @@ describe("Auth Tests", () => {
         // First request: Without Authorization
         const response = yield (0, supertest_1.default)(app_1.default)
             .post("/posts")
-            .set("Authorization", `Bearer ${userInfo.token + '1'}`)
+            .set("Authorization", `Bearer ${userInfo.accessToken + '1'}`)
             .send({
             sender: userInfo._id,
             title: "My First Post",
@@ -94,6 +93,39 @@ describe("Auth Tests", () => {
         console.log("Unauthorized Response Status:", response.statusCode); // Debug status code
         console.log("Unauthorized Response Body:", response.body); // Debug response body
         expect(response.statusCode).not.toBe(201);
+    }));
+    test("Refresh token", () => __awaiter(void 0, void 0, void 0, function* () {
+        const refreshResponse = yield (0, supertest_1.default)(app_1.default).post("/auth/refresh").send({ refreshToken: userInfo.refreshToken });
+        expect(refreshResponse.statusCode).toBe(200);
+        expect(refreshResponse.body.accessToken).toBeDefined();
+        expect(refreshResponse.body.refreshToken).toBeDefined();
+        userInfo.accessToken = refreshResponse.body.accessToken;
+        userInfo.refreshToken = refreshResponse.body.refreshToken;
+    }));
+    test("Logout", () => __awaiter(void 0, void 0, void 0, function* () {
+        const logoutResponse = yield (0, supertest_1.default)(app_1.default).post("/auth/logout").send({ refreshToken: userInfo.refreshToken });
+        expect(logoutResponse.statusCode).toBe(200);
+        const refreshResponse = yield (0, supertest_1.default)(app_1.default).post("/auth/refresh").send({ refreshToken: userInfo.refreshToken });
+        expect(refreshResponse.statusCode).not.toBe(200);
+    }));
+    test("Refresh tokenm multiuple usage", () => __awaiter(void 0, void 0, void 0, function* () {
+        //login - get refresh token
+        const refreshResponse = yield (0, supertest_1.default)(app_1.default).post("/auth/login").send({ email: userInfo.email, password: userInfo.password });
+        expect(refreshResponse.statusCode).toBe(200);
+        expect(refreshResponse.body.accessToken).toBeDefined();
+        expect(refreshResponse.body.refreshToken).toBeDefined();
+        userInfo.accessToken = refreshResponse.body.accessToken;
+        userInfo.refreshToken = refreshResponse.body.refreshToken;
+        //first usage of token
+        const response2 = yield (0, supertest_1.default)(app_1.default).post("/auth/refresh").send({ refreshToken: userInfo.refreshToken });
+        expect(response2.statusCode).toBe(200);
+        const newRefreshToken = response2.body.refreshToken;
+        //2nd usage of refresh token expectin to fail
+        const response3 = yield (0, supertest_1.default)(app_1.default).post("/auth/refresh").send({ refreshToken: userInfo.refreshToken });
+        expect(response3.statusCode).not.toBe(200);
+        //try the new refresh token expect to fail
+        const response4 = yield (0, supertest_1.default)(app_1.default).post("/auth/refresh").send({ refreshToken: newRefreshToken });
+        expect(response4.statusCode).not.toBe(200);
     }));
 });
 //# sourceMappingURL=auth.test.js.map
