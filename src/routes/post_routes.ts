@@ -66,11 +66,131 @@ const router: Router = express.Router();
  */
 
 router.post("/", authMiddleware, createPost);
-
+/**
+ * @swagger
+ * /posts:
+ *   get:
+ *     summary: Retrieves all posts
+ *     tags: [Posts]
+ *     responses:
+ *       200:
+ *         description: A list of all posts
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 $ref: '#/components/schemas/Post'
+ *       401:
+ *         description: Unauthorized access
+ */
 router.get("/", getPosts);
+/**
+ * @swagger
+ * /posts/by-sender:
+ *   get:
+ *     summary: Retrieves posts by sender
+ *     tags: [Posts]
+ *     responses:
+ *       200:
+ *         description: A list of posts by the sender
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 $ref: '#/components/schemas/Post'
+ *       401:
+ *         description: Unauthorized access
+ */
 router.get("/by-sender", getPostsBySender);
+/**
+ * @swagger
+ * /posts/{id}:
+ *   get:
+ *     summary: Retrieves a post by ID
+ *     tags: [Posts]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         schema:
+ *           type: string
+ *         required: true
+ *         description: The ID of the post to retrieve
+ *     responses:
+ *       200:
+ *         description: The requested post
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Post'
+ *       401:
+ *         description: Unauthorized access
+ *       404:
+ *         description: Post not found
+ */
 router.get("/:id", getPostById);
+/**
+ * @swagger
+ * /posts/{id}:
+ *   put:
+ *     summary: Updates a post by ID
+ *     tags: [Posts]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         schema:
+ *           type: string
+ *         required: true
+ *         description: The ID of the post to update
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/Post'
+ *     responses:
+ *       200:
+ *         description: The updated post
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Post'
+ *       401:
+ *         description: Unauthorized access
+ *       404:
+ *         description: Post not found
+ */
 router.put("/:id", authMiddleware, updatePost);
+/**
+ * @swagger
+ * /posts/{id}:
+ *   delete:
+ *     summary: Deletes a post by ID
+ *     tags: [Posts]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         schema:
+ *           type: string
+ *         required: true
+ *         description: The ID of the post to delete
+ *     responses:
+ *       200:
+ *         description: Post deleted successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: Post deleted successfully
+ *       401:
+ *         description: Unauthorized access
+ *       404:
+ *         description: Post not found
+ */
 router.delete("/:id", authMiddleware, deletePost);
 
 export default router;
