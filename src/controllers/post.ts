@@ -1,12 +1,10 @@
 import { Request, Response } from "express";
-import Post from "../models/post"; // Assuming Post is exported as a default TypeScript module
+import Post from "../models/post"; 
 
-// Create a post
 export const createPost = async (req: Request, res: Response): Promise<void> => {
     try {
         const userId = req.query.userId as string;
 
-        // Validate userId and required fields
         if (!userId) {
             res.status(400).send({ error: "User ID is required" });
             return;
@@ -19,22 +17,20 @@ export const createPost = async (req: Request, res: Response): Promise<void> => 
             return;
         }
 
-        // Create a new post
         const post = new Post({
             title,
             content,
-            sender: userId, // Associate post with the sender
+            sender: userId, 
         });
 
         await post.save();
-        res.status(201).send(post); // Respond with the created post
+        res.status(201).send(post);
     } catch (err) {
-        console.error("Error creating post:", err); // Log error for debugging
+        console.error("Error creating post:", err); 
         res.status(500).send({ error: "Failed to create post", details: err });
     }
 };
 
-// Get all posts
 export const getPosts = async (req: Request, res: Response): Promise<void> => {
     try {
         const posts = await Post.find();
@@ -45,7 +41,6 @@ export const getPosts = async (req: Request, res: Response): Promise<void> => {
     }
 };
 
-// Get a single post by ID
 export const getPostById = async (req: Request, res: Response): Promise<void> => {
     try {
         const post = await Post.findById(req.params.id);
@@ -60,7 +55,6 @@ export const getPostById = async (req: Request, res: Response): Promise<void> =>
     }
 };
 
-// Update a post
 export const updatePost = async (req: Request, res: Response): Promise<void> => {
     try {
         const post = await Post.findByIdAndUpdate(req.params.id, req.body, { new: true });
@@ -75,7 +69,6 @@ export const updatePost = async (req: Request, res: Response): Promise<void> => 
     }
 };
 
-// Delete a post
 export const deletePost = async (req: Request, res: Response): Promise<void> => {
     try {
         const post = await Post.findByIdAndDelete(req.params.id);
@@ -90,7 +83,6 @@ export const deletePost = async (req: Request, res: Response): Promise<void> => 
     }
 };
 
-// Get posts by sender ID
 export const getPostsBySender = async (req: Request, res: Response): Promise<void> => {
     try {
         const senderId = req.query.sender as string; // Get sender ID from query parameters

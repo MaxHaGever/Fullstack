@@ -19,8 +19,7 @@ const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 const dotenv_1 = __importDefault(require("dotenv"));
 dotenv_1.default.config();
 const register = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const email = req.body.email;
-    const password = req.body.password;
+    const { email, password, username } = req.body;
     if (!email || !password) {
         res.status(400).send("Missing email or password");
         return;
@@ -36,6 +35,7 @@ const register = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
         const user = yield user_model_1.default.create({
             email,
             password: hashPassword,
+            username,
         });
         const accessToken = jsonwebtoken_1.default.sign({ _id: user._id }, process.env.TOKEN_SECRET, { expiresIn: process.env.TOKEN_EXPIRATION || "1h" });
         const refreshToken = jsonwebtoken_1.default.sign({ _id: user._id }, process.env.TOKEN_SECRET, { expiresIn: process.env.REFRESH_TOKEN_EXPIRATION || "1d" });
@@ -44,6 +44,7 @@ const register = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
         res.status(200).send({
             user: {
                 email: user.email,
+                username: user.username,
                 _id: user._id,
             },
             accessToken,
@@ -55,8 +56,7 @@ const register = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     }
 });
 const login = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const email = req.body.email;
-    const password = req.body.password;
+    const { email, password } = req.body;
     if (!email || !password) {
         res.status(400).send("Missing email or password");
         return;
@@ -77,11 +77,13 @@ const login = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
             return;
         }
         const random = Math.floor(Math.random() * 1000000000) + 1;
-        const accessToken = jsonwebtoken_1.default.sign({ _id: user._id,
-            random: random
+        const accessToken = jsonwebtoken_1.default.sign({
+            _id: user._id,
+            random: random,
         }, process.env.TOKEN_SECRET, { expiresIn: process.env.TOKEN_EXPIRATION || "1h" });
-        const refreshToken = jsonwebtoken_1.default.sign({ _id: user._id,
-            random: random
+        const refreshToken = jsonwebtoken_1.default.sign({
+            _id: user._id,
+            random: random,
         }, process.env.TOKEN_SECRET, { expiresIn: process.env.REFRESH_TOKEN_EXPIRATION || "1d" });
         if (user.refreshTokens == null) {
             user.refreshTokens = [];
@@ -90,6 +92,7 @@ const login = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
         yield user.save();
         res.status(200).send({
             email: user.email,
+            username: user.username,
             _id: user._id,
             accessToken: accessToken,
             refreshToken: refreshToken,
@@ -102,14 +105,11 @@ const login = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
 });
 const logout = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const refreshToken = req.body.refreshToken;
-    console.log("Logout request received with refresh token:", refreshToken);
     if (!refreshToken) {
-        console.log("Missing refresh token in request body");
         res.status(400).send("Missing refresh token");
         return;
     }
     if (!process.env.TOKEN_SECRET) {
-        console.log("Missing TOKEN_SECRET");
         res.status(500).send("Missing token secret");
         return;
     }
@@ -135,7 +135,6 @@ const logout = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
 });
 const refresh = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const refreshToken = req.body.refreshToken;
-    console.log("Received refresh token:", refreshToken); // Debug input token
     if (!refreshToken) {
         res.status(400).send("Missing refresh token");
         return;
@@ -146,26 +145,19 @@ const refresh = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     }
     try {
         const decoded = jsonwebtoken_1.default.verify(refreshToken, process.env.TOKEN_SECRET);
-        console.log("Decoded payload:", decoded); // Debug decoded payload
         const user = yield user_model_1.default.findOne({ _id: decoded._id });
         if (!user) {
             res.status(400).send("User not found");
             return;
         }
-        console.log("User's current refresh tokens:", user.refreshTokens); // Debug user's refresh tokens
         if (!user.refreshTokens || !user.refreshTokens.includes(refreshToken)) {
-            console.log("Invalid or reused refresh token");
             res.status(400).send("Invalid refresh token");
             return;
         }
-        // Remove the current refresh token
         user.refreshTokens = user.refreshTokens.filter((token) => token !== refreshToken);
-        console.log("Updated refresh tokens after removal:", user.refreshTokens); // Debug token removal
-        // Generate new tokens
         const newAccessToken = jsonwebtoken_1.default.sign({ _id: user._id }, process.env.TOKEN_SECRET, { expiresIn: process.env.TOKEN_EXPIRATION || "1h" });
         const newRefreshToken = jsonwebtoken_1.default.sign({ _id: user._id }, process.env.TOKEN_SECRET, { expiresIn: process.env.REFRESH_TOKEN_EXPIRATION || "1d" });
         user.refreshTokens.push(newRefreshToken);
-        console.log("New refresh token added:", newRefreshToken); // Debug new refresh token
         yield user.save();
         res.status(200).send({
             accessToken: newAccessToken,
@@ -173,15 +165,13 @@ const refresh = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
         });
     }
     catch (err) {
-        console.error("Error in refresh endpoint:", err); // Debug any errors
+        console.error("Error in refresh endpoint:", err);
         res.status(403).send("Invalid or expired refresh token");
     }
 });
 const authMiddleware = (req, res, next) => {
     const authHeader = req.headers["authorization"];
     const token = authHeader && authHeader.split(" ")[1];
-    console.log("Authorization Header:", authHeader); // Debug log
-    console.log("Extracted Token:", token); // Debug log
     if (!token) {
         res.status(401).json({ error: "Missing token" });
         return;
@@ -192,11 +182,9 @@ const authMiddleware = (req, res, next) => {
     }
     jsonwebtoken_1.default.verify(token, process.env.TOKEN_SECRET, (err, payload) => {
         if (err) {
-            console.error("Token verification failed:", err); // Debug log
             res.status(403).json({ error: "Invalid token" });
             return;
         }
-        console.log("Token verified successfully"); // Debug log
         const decodedPayload = payload;
         req.query.userId = decodedPayload._id;
         next();

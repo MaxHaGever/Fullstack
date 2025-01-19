@@ -26,6 +26,7 @@ const router = express_1.default.Router();
  *       required:
  *         - email
  *         - password
+ *         - username
  *       properties:
  *         email:
  *           type: string
@@ -33,12 +34,37 @@ const router = express_1.default.Router();
  *         password:
  *           type: string
  *           description: The user password
+ *         username:
+ *           type: string
+ *           description: The user username
  *       example:
  *         email: "bob@gmail.com"
  *         password: "123456"
+ *         username: "BobTheBuilder"
  *     Token:
  *       type: object
  *       properties:
+ *         accessToken:
+ *           type: string
+ *           description: JWT access token
+ *         refreshToken:
+ *           type: string
+ *           description: JWT refresh token
+ *     AuthResponse:
+ *       type: object
+ *       properties:
+ *         user:
+ *           type: object
+ *           properties:
+ *             email:
+ *               type: string
+ *               description: The user's email
+ *             username:
+ *               type: string
+ *               description: The user's username
+ *             _id:
+ *               type: string
+ *               description: The user's unique ID
  *         accessToken:
  *           type: string
  *           description: JWT access token
@@ -61,6 +87,10 @@ const router = express_1.default.Router();
  *     responses:
  *       200:
  *         description: User registered successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/AuthResponse'
  */
 /**
  * @swagger
@@ -80,7 +110,7 @@ const router = express_1.default.Router();
  *         content:
  *           application/json:
  *             schema:
- *               $ref: '#/components/schemas/Token'
+ *               $ref: '#/components/schemas/AuthResponse'
  *       400:
  *         description: Invalid email or password
  *       500:
@@ -92,29 +122,20 @@ const router = express_1.default.Router();
  *   post:
  *     summary: Logs out a user
  *     tags: [Auth]
- *     responses:
- *       200:
- *         description: User logged out successfully
- */
-/**
- * @swagger
- * /auth/refresh:
- *   post:
- *     summary: Refreshes the access token
- *     tags: [Auth]
  *     requestBody:
  *       required: true
  *       content:
  *         application/json:
  *           schema:
- *             $ref: '#/components/schemas/Token'
+ *             type: object
+ *             properties:
+ *               refreshToken:
+ *                 type: string
+ *                 description: The refresh token to invalidate
+ *                 example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
  *     responses:
  *       200:
- *         description: New access token generated
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/Token'
+ *         description: User logged out successfully
  */
 router.post("/register", auth_controller_1.default.register);
 router.post("/login", auth_controller_1.default.login);

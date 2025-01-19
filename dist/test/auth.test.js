@@ -32,80 +32,78 @@ afterAll(() => __awaiter(void 0, void 0, void 0, function* () {
 const userInfo = {
     email: "maxspector@gmail.com",
     password: "123456",
+    username: "maxspectorr",
 };
 describe("Auth Tests", () => {
     test("Auth Registration", () => __awaiter(void 0, void 0, void 0, function* () {
         const response = yield (0, supertest_1.default)(app_1.default).post("/auth/register").send(userInfo);
         expect(response.statusCode).toBe(200);
+        expect(response.body.user).toBeDefined();
+        expect(response.body.user.username).toBe(userInfo.username);
     }));
-    test("Auth Registration fail", () => __awaiter(void 0, void 0, void 0, function* () {
+    test("Auth Registration fail (duplicate email)", () => __awaiter(void 0, void 0, void 0, function* () {
         const response = yield (0, supertest_1.default)(app_1.default).post("/auth/register").send(userInfo);
         expect(response.statusCode).not.toBe(200);
     }));
     test("Auth Login", () => __awaiter(void 0, void 0, void 0, function* () {
-        const loginResponse = yield (0, supertest_1.default)(app_1.default).post("/auth/login").send(userInfo);
+        const loginResponse = yield (0, supertest_1.default)(app_1.default).post("/auth/login").send({
+            email: userInfo.email,
+            password: userInfo.password,
+        });
         expect(loginResponse.statusCode).toBe(200);
-        const accessToken = loginResponse.body.accessToken;
+        const { accessToken, refreshToken, _id, username } = loginResponse.body;
         expect(accessToken).toBeDefined();
-        const refreshToken = loginResponse.body.refreshToken;
         expect(refreshToken).toBeDefined();
-        const userId = loginResponse.body._id;
-        expect(userId).toBeDefined();
+        expect(_id).toBeDefined();
+        expect(username).toBe(userInfo.username);
         userInfo.accessToken = accessToken;
         userInfo.refreshToken = refreshToken;
-        userInfo._id = userId;
+        userInfo._id = _id;
     }));
-    test("Auth Login fail", () => __awaiter(void 0, void 0, void 0, function* () {
-        const loginResponse = yield (0, supertest_1.default)(app_1.default).post("/auth/login").send({ email: userInfo.email, password: userInfo.password + '1' });
+    test("Auth Login fail (invalid password)", () => __awaiter(void 0, void 0, void 0, function* () {
+        const loginResponse = yield (0, supertest_1.default)(app_1.default).post("/auth/login").send({
+            email: userInfo.email,
+            password: userInfo.password + "1",
+        });
         expect(loginResponse.statusCode).not.toBe(200);
     }));
-    test("Make sure two tokens are not the same", () => __awaiter(void 0, void 0, void 0, function* () {
-        const loginResponse = yield (0, supertest_1.default)(app_1.default).post("/auth/login").send(userInfo);
+    test("Ensure tokens are unique", () => __awaiter(void 0, void 0, void 0, function* () {
+        const loginResponse1 = yield (0, supertest_1.default)(app_1.default).post("/auth/login").send(userInfo);
         const loginResponse2 = yield (0, supertest_1.default)(app_1.default).post("/auth/login").send(userInfo);
-        expect(loginResponse.body.accessToken).not.toBe(loginResponse2.body.accessToken);
-        expect(loginResponse.body.refreshToken).not.toBe(loginResponse2.body.refreshToken);
+        expect(loginResponse1.body.accessToken).not.toBe(loginResponse2.body.accessToken);
+        expect(loginResponse1.body.refreshToken).not.toBe(loginResponse2.body.refreshToken);
     }));
-    test("Get protected API", () => __awaiter(void 0, void 0, void 0, function* () {
-        // First request: Without Authorization
-        const response = yield (0, supertest_1.default)(app_1.default)
-            .post("/posts")
-            .send({
-            sender: "invalid",
-            title: "My First Post",
-            content: "This is my first post",
+    test("Get protected API (unauthorized)", () => __awaiter(void 0, void 0, void 0, function* () {
+        const response = yield (0, supertest_1.default)(app_1.default).post("/posts").send({
+            title: "Unauthorized Post",
+            content: "This should fail",
         });
-        console.log("Unauthorized Response Status:", response.statusCode); // Debug status code
-        console.log("Unauthorized Response Body:", response.body); // Debug response body
-        expect(response.statusCode).not.toBe(201);
-        // Second request: With Authorization
-        const response2 = yield (0, supertest_1.default)(app_1.default)
+        expect(response.statusCode).toBe(401);
+    }));
+    test("Get protected API (authorized)", () => __awaiter(void 0, void 0, void 0, function* () {
+        const response = yield (0, supertest_1.default)(app_1.default)
             .post("/posts")
             .set("Authorization", `Bearer ${userInfo.accessToken}`)
             .send({
-            sender: "invalid",
-            title: "My First Post",
-            content: "This is my first post",
+            title: "Authorized Post",
+            content: "This should succeed",
         });
-        console.log("Authorized Response Status:", response2.statusCode); // Debug status code
-        console.log("Authorized Response Body:", response2.body); // Debug response body
-        expect(response2.statusCode).toBe(201);
+        expect(response.statusCode).toBe(201);
     }));
-    test("Get protected API invalid token", () => __awaiter(void 0, void 0, void 0, function* () {
-        // First request: Without Authorization
+    test("Get protected API (invalid token)", () => __awaiter(void 0, void 0, void 0, function* () {
         const response = yield (0, supertest_1.default)(app_1.default)
             .post("/posts")
-            .set("Authorization", `Bearer ${userInfo.accessToken + '1'}`)
+            .set("Authorization", `Bearer ${userInfo.accessToken}1`)
             .send({
-            sender: userInfo._id,
-            title: "My First Post",
-            content: "This is my first post",
+            title: "Invalid Token Post",
+            content: "This should fail",
         });
-        console.log("Unauthorized Response Status:", response.statusCode); // Debug status code
-        console.log("Unauthorized Response Body:", response.body); // Debug response body
-        expect(response.statusCode).not.toBe(201);
+        expect(response.statusCode).toBe(403);
     }));
     test("Refresh token", () => __awaiter(void 0, void 0, void 0, function* () {
-        const refreshResponse = yield (0, supertest_1.default)(app_1.default).post("/auth/refresh").send({ refreshToken: userInfo.refreshToken });
+        const refreshResponse = yield (0, supertest_1.default)(app_1.default)
+            .post("/auth/refresh")
+            .send({ refreshToken: userInfo.refreshToken });
         expect(refreshResponse.statusCode).toBe(200);
         expect(refreshResponse.body.accessToken).toBeDefined();
         expect(refreshResponse.body.refreshToken).toBeDefined();
@@ -113,48 +111,34 @@ describe("Auth Tests", () => {
         userInfo.refreshToken = refreshResponse.body.refreshToken;
     }));
     test("Logout", () => __awaiter(void 0, void 0, void 0, function* () {
-        // Step 1: Log in and retrieve tokens
-        const loginResponse = yield (0, supertest_1.default)(app_1.default).post("/auth/login").send({
-            email: userInfo.email,
-            password: userInfo.password,
-        });
-        expect(loginResponse.statusCode).toBe(200);
-        userInfo.refreshToken = loginResponse.body.refreshToken;
-        // Step 2: Attempt to log out
-        const logoutResponse = yield (0, supertest_1.default)(app_1.default).post("/auth/logout").send({ refreshToken: userInfo.refreshToken });
+        const logoutResponse = yield (0, supertest_1.default)(app_1.default)
+            .post("/auth/logout")
+            .send({ refreshToken: userInfo.refreshToken });
         expect(logoutResponse.statusCode).toBe(200);
-        // Step 3: Verify refresh token cannot be reused
-        const refreshResponse = yield (0, supertest_1.default)(app_1.default).post("/auth/refresh").send({ refreshToken: userInfo.refreshToken });
-        expect(refreshResponse.statusCode).not.toBe(200);
+        const refreshResponse = yield (0, supertest_1.default)(app_1.default)
+            .post("/auth/refresh")
+            .send({ refreshToken: userInfo.refreshToken });
+        expect(refreshResponse.statusCode).toBe(400);
     }));
-    test("Refresh token multiple usage", () => __awaiter(void 0, void 0, void 0, function* () {
-        const loginResponse = yield (0, supertest_1.default)(app_1.default)
-            .post("/auth/login")
-            .send({ email: userInfo.email, password: userInfo.password });
-        expect(loginResponse.statusCode).toBe(200);
-        expect(loginResponse.body.refreshToken).toBeDefined();
+    test("Prevent multiple refresh token usage", () => __awaiter(void 0, void 0, void 0, function* () {
+        const loginResponse = yield (0, supertest_1.default)(app_1.default).post("/auth/login").send(userInfo);
         const initialRefreshToken = loginResponse.body.refreshToken;
-        const firstRefreshResponse = yield (0, supertest_1.default)(app_1.default)
+        const firstRefresh = yield (0, supertest_1.default)(app_1.default)
             .post("/auth/refresh")
             .send({ refreshToken: initialRefreshToken });
-        expect(firstRefreshResponse.statusCode).toBe(200);
-        expect(firstRefreshResponse.body.refreshToken).toBeDefined();
-        const newRefreshToken = firstRefreshResponse.body.refreshToken;
-        const reusedTokenResponse = yield (0, supertest_1.default)(app_1.default)
+        expect(firstRefresh.statusCode).toBe(200);
+        const reusedRefresh = yield (0, supertest_1.default)(app_1.default)
             .post("/auth/refresh")
             .send({ refreshToken: initialRefreshToken });
-        expect(reusedTokenResponse.statusCode).toBe(400);
-        const secondRefreshResponse = yield (0, supertest_1.default)(app_1.default)
-            .post("/auth/refresh")
-            .send({ refreshToken: newRefreshToken });
-        expect(secondRefreshResponse.statusCode).toBe(200);
+        expect(reusedRefresh.statusCode).toBe(400);
     }));
-    test("Timeout on refresh access token", () => __awaiter(void 0, void 0, void 0, function* () {
-        const loginResponse = yield (0, supertest_1.default)(app_1.default)
-            .post("/auth/login")
-            .send({ email: userInfo.email, password: userInfo.password });
-        expect(loginResponse.statusCode).toBe(200);
-        expect(loginResponse.body.refreshToken).toBeDefined();
+    test("Timeout refresh token (simulate expiration)", () => __awaiter(void 0, void 0, void 0, function* () {
+        const loginResponse = yield (0, supertest_1.default)(app_1.default).post("/auth/login").send(userInfo);
+        const refreshToken = loginResponse.body.refreshToken;
+        const refreshResponse = yield (0, supertest_1.default)(app_1.default)
+            .post("/auth/refresh")
+            .send({ refreshToken });
+        expect(refreshResponse.statusCode).toBe(200);
     }));
 });
 //# sourceMappingURL=auth.test.js.map

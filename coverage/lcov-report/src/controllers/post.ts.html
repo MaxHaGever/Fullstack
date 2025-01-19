@@ -163,22 +163,12 @@
 <a name='L98'></a><a href='#L98'>98</a>
 <a name='L99'></a><a href='#L99'>99</a>
 <a name='L100'></a><a href='#L100'>100</a>
-<a name='L101'></a><a href='#L101'>101</a>
-<a name='L102'></a><a href='#L102'>102</a>
-<a name='L103'></a><a href='#L103'>103</a>
-<a name='L104'></a><a href='#L104'>104</a>
-<a name='L105'></a><a href='#L105'>105</a>
-<a name='L106'></a><a href='#L106'>106</a>
-<a name='L107'></a><a href='#L107'>107</a>
-<a name='L108'></a><a href='#L108'>108</a>
-<a name='L109'></a><a href='#L109'>109</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
+<a name='L101'></a><a href='#L101'>101</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">2x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">3x</span>
 <span class="cline-any cline-yes">3x</span>
 <span class="cline-any cline-yes">3x</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">3x</span>
 <span class="cline-any cline-no">&nbsp;</span>
@@ -192,7 +182,6 @@
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">3x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -204,7 +193,6 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -215,7 +203,6 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -233,7 +220,6 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">2x</span>
 <span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-yes">1x</span>
@@ -248,7 +234,6 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">2x</span>
 <span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-yes">1x</span>
@@ -260,7 +245,6 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -280,14 +264,12 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js">import { Request, Response } from "express";
-import Post from "../models/post"; // Assuming Post is exported as a default TypeScript module
+import Post from "../models/post"; 
 &nbsp;
-// Create a post
 export const createPost = async (req: Request, res: Response): Promise&lt;void&gt; =&gt; {
     try {
         const userId = req.query.userId as string;
 &nbsp;
-        // Validate userId and required fields
         <span class="missing-if-branch" title="if path not taken" >I</span>if (!userId) {
 <span class="cstat-no" title="statement not covered" >            res.status(400).send({ error: "User ID is required" });</span>
 <span class="cstat-no" title="statement not covered" >            return;</span>
@@ -300,22 +282,20 @@ export const createPost = async (req: Request, res: Response): Promise&lt;void&g
 <span class="cstat-no" title="statement not covered" >            return;</span>
         }
 &nbsp;
-        // Create a new post
         const post = new Post({
             title,
             content,
-            sender: userId, // Associate post with the sender
+            sender: userId, 
         });
 &nbsp;
         await post.save();
-        res.status(201).send(post); // Respond with the created post
+        res.status(201).send(post);
     } catch (err) {
-<span class="cstat-no" title="statement not covered" >        console.error("Error creating post:", err); </span>// Log error for debugging
+<span class="cstat-no" title="statement not covered" >        console.error("Error creating post:", err); </span>
 <span class="cstat-no" title="statement not covered" >        res.status(500).send({ error: "Failed to create post", details: err });</span>
     }
 };
 &nbsp;
-// Get all posts
 export const getPosts = async (req: Request, res: Response): Promise&lt;void&gt; =&gt; {
     try {
         const posts = await Post.find();
@@ -326,7 +306,6 @@ export const getPosts = async (req: Request, res: Response): Promise&lt;void&gt;
     }
 };
 &nbsp;
-// Get a single post by ID
 export const getPostById = async (req: Request, res: Response): Promise&lt;void&gt; =&gt; {
     try {
         const post = await Post.findById(req.params.id);
@@ -341,7 +320,6 @@ export const getPostById = async (req: Request, res: Response): Promise&lt;void&
     }
 };
 &nbsp;
-// Update a post
 export const updatePost = async (req: Request, res: Response): Promise&lt;void&gt; =&gt; {
     try {
         const post = await Post.findByIdAndUpdate(req.params.id, req.body, { new: true });
@@ -356,7 +334,6 @@ export const updatePost = async (req: Request, res: Response): Promise&lt;void&g
     }
 };
 &nbsp;
-// Delete a post
 export const deletePost = async (req: Request, res: Response): Promise&lt;void&gt; =&gt; {
     try {
         const post = await Post.findByIdAndDelete(req.params.id);
@@ -371,7 +348,6 @@ export const deletePost = async (req: Request, res: Response): Promise&lt;void&g
     }
 };
 &nbsp;
-// Get posts by sender ID
 export const getPostsBySender = <span class="fstat-no" title="function not covered" >async (r</span>eq: Request, res: Response): Promise&lt;void&gt; =&gt;<span class="cstat-no" title="statement not covered" ><span class="fstat-no" title="function not covered" > {</span></span>
 <span class="cstat-no" title="statement not covered" >    try {</span>
         const senderId = <span class="cstat-no" title="statement not covered" >req.query.sender as string;</span> // Get sender ID from query parameters
@@ -394,7 +370,7 @@ export const getPostsBySender = <span class="fstat-no" title="function not cover
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2025-01-19T19:29:43.139Z
+                at 2025-01-19T20:27:58.390Z
             </div>
         <script src="../../prettify.js"></script>
         <script>

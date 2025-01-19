@@ -1,9 +1,8 @@
 import mongoose from "mongoose";
 import request from "supertest";
 import app from "../app";
-import Users from "../models/user_model"
-import postModel from "../models/post"
-
+import Users from "../models/user_model";
+import postModel from "../models/post";
 
 beforeAll(async () => {
     const dbURI = process.env.dbURI;
@@ -11,8 +10,8 @@ beforeAll(async () => {
         throw new Error("Database connection string (dbURI) is not defined");
     }
     await mongoose.connect(dbURI);
-    await Users.deleteMany()
-    await postModel.deleteMany()
+    await Users.deleteMany();
+    await postModel.deleteMany();
 });
 
 afterAll(async () => {
@@ -22,6 +21,7 @@ afterAll(async () => {
 type UserInfo = {
     email: string;
     password: string;
+    username: string;
     accessToken?: string;
     refreshToken?: string;
     _id?: string;
@@ -30,152 +30,130 @@ type UserInfo = {
 const userInfo: UserInfo = {
     email: "maxspector@gmail.com",
     password: "123456",
+    username: "maxspectorr",
 };
 
 describe("Auth Tests", () => {
     test("Auth Registration", async () => {
         const response = await request(app).post("/auth/register").send(userInfo);
         expect(response.statusCode).toBe(200);
+        expect(response.body.user).toBeDefined();
+        expect(response.body.user.username).toBe(userInfo.username);
     });
 
-    test("Auth Registration fail", async () => {
+    test("Auth Registration fail (duplicate email)", async () => {
         const response = await request(app).post("/auth/register").send(userInfo);
         expect(response.statusCode).not.toBe(200);
     });
-    
+
     test("Auth Login", async () => {
-        const loginResponse = await request(app).post("/auth/login").send(userInfo);
-   
-        expect(loginResponse.statusCode).toBe(200);
-    
-        const accessToken = loginResponse.body.accessToken;
-        expect(accessToken).toBeDefined();
-        const refreshToken = loginResponse.body.refreshToken;
-        expect(refreshToken).toBeDefined();
-    
-        const userId = loginResponse.body._id;
-        expect(userId).toBeDefined();
-    
-        userInfo.accessToken = accessToken;
-        userInfo.refreshToken = refreshToken;
-        userInfo._id = userId;
-    });
-
-    test("Auth Login fail", async () => {
-        const loginResponse = await request(app).post("/auth/login").send({ email: userInfo.email, password: userInfo.password + '1' });
-        expect(loginResponse.statusCode).not.toBe(200);
-    });
-
-    test("Make sure two tokens are not the same", async () => {
-        const loginResponse = await request(app).post("/auth/login").send(userInfo);
-        const loginResponse2 = await request(app).post("/auth/login").send(userInfo);
-        expect(loginResponse.body.accessToken).not.toBe(loginResponse2.body.accessToken);
-        expect(loginResponse.body.refreshToken).not.toBe(loginResponse2.body.refreshToken);
-    });
-    
-    test("Get protected API", async () => {
-        // First request: Without Authorization
-        const response = await request(app)
-            .post("/posts")
-            .send({
-                sender: "invalid",
-                title: "My First Post",
-                content: "This is my first post",
-            });
-        console.log("Unauthorized Response Status:", response.statusCode); // Debug status code
-        console.log("Unauthorized Response Body:", response.body); // Debug response body
-        expect(response.statusCode).not.toBe(201);
-    
-        // Second request: With Authorization
-        const response2 = await request(app)
-            .post("/posts")
-            .set("Authorization", `Bearer ${userInfo.accessToken}`)
-            .send({
-                sender: "invalid",
-                title: "My First Post",
-                content: "This is my first post",
-            });
-        console.log("Authorized Response Status:", response2.statusCode); // Debug status code
-        console.log("Authorized Response Body:", response2.body); // Debug response body
-        expect(response2.statusCode).toBe(201);
-    });
-
-    test("Get protected API invalid token", async () => {
-        // First request: Without Authorization
-        const response = await request(app)
-            .post("/posts")
-            .set("Authorization", `Bearer ${userInfo.accessToken+ '1'}`)
-            .send({
-                sender: userInfo._id,
-                title: "My First Post",
-                content: "This is my first post",
-            });
-        console.log("Unauthorized Response Status:", response.statusCode); // Debug status code
-        console.log("Unauthorized Response Body:", response.body); // Debug response body
-        expect(response.statusCode).not.toBe(201);
-    });
-
-    test("Refresh token", async () => {
-        const refreshResponse = await request(app).post("/auth/refresh").send({ refreshToken: userInfo.refreshToken });
-        expect(refreshResponse.statusCode).toBe(200);
-        expect(refreshResponse.body.accessToken).toBeDefined();
-        expect(refreshResponse.body.refreshToken).toBeDefined(); 
-        userInfo.accessToken = refreshResponse.body.accessToken;
-        userInfo.refreshToken = refreshResponse.body.refreshToken;
-    });
-
-    test("Logout", async () => {
-        // Step 1: Log in and retrieve tokens
         const loginResponse = await request(app).post("/auth/login").send({
             email: userInfo.email,
             password: userInfo.password,
         });
         expect(loginResponse.statusCode).toBe(200);
-        userInfo.refreshToken = loginResponse.body.refreshToken;
-    
-        // Step 2: Attempt to log out
-        const logoutResponse = await request(app).post("/auth/logout").send({ refreshToken: userInfo.refreshToken });
+
+        const { accessToken, refreshToken, _id, username } = loginResponse.body;
+        expect(accessToken).toBeDefined();
+        expect(refreshToken).toBeDefined();
+        expect(_id).toBeDefined();
+        expect(username).toBe(userInfo.username);
+
+        userInfo.accessToken = accessToken;
+        userInfo.refreshToken = refreshToken;
+        userInfo._id = _id;
+    });
+
+    test("Auth Login fail (invalid password)", async () => {
+        const loginResponse = await request(app).post("/auth/login").send({
+            email: userInfo.email,
+            password: userInfo.password + "1",
+        });
+        expect(loginResponse.statusCode).not.toBe(200);
+    });
+
+    test("Ensure tokens are unique", async () => {
+        const loginResponse1 = await request(app).post("/auth/login").send(userInfo);
+        const loginResponse2 = await request(app).post("/auth/login").send(userInfo);
+        expect(loginResponse1.body.accessToken).not.toBe(loginResponse2.body.accessToken);
+        expect(loginResponse1.body.refreshToken).not.toBe(loginResponse2.body.refreshToken);
+    });
+
+    test("Get protected API (unauthorized)", async () => {
+        const response = await request(app).post("/posts").send({
+            title: "Unauthorized Post",
+            content: "This should fail",
+        });
+        expect(response.statusCode).toBe(401);
+    });
+
+    test("Get protected API (authorized)", async () => {
+        const response = await request(app)
+            .post("/posts")
+            .set("Authorization", `Bearer ${userInfo.accessToken}`)
+            .send({
+                title: "Authorized Post",
+                content: "This should succeed",
+            });
+        expect(response.statusCode).toBe(201);
+    });
+
+    test("Get protected API (invalid token)", async () => {
+        const response = await request(app)
+            .post("/posts")
+            .set("Authorization", `Bearer ${userInfo.accessToken}1`)
+            .send({
+                title: "Invalid Token Post",
+                content: "This should fail",
+            });
+        expect(response.statusCode).toBe(403);
+    });
+
+    test("Refresh token", async () => {
+        const refreshResponse = await request(app)
+            .post("/auth/refresh")
+            .send({ refreshToken: userInfo.refreshToken });
+        expect(refreshResponse.statusCode).toBe(200);
+        expect(refreshResponse.body.accessToken).toBeDefined();
+        expect(refreshResponse.body.refreshToken).toBeDefined();
+        userInfo.accessToken = refreshResponse.body.accessToken;
+        userInfo.refreshToken = refreshResponse.body.refreshToken;
+    });
+
+    test("Logout", async () => {
+        const logoutResponse = await request(app)
+            .post("/auth/logout")
+            .send({ refreshToken: userInfo.refreshToken });
         expect(logoutResponse.statusCode).toBe(200);
-    
-        // Step 3: Verify refresh token cannot be reused
-        const refreshResponse = await request(app).post("/auth/refresh").send({ refreshToken: userInfo.refreshToken });
-        expect(refreshResponse.statusCode).not.toBe(200);
-    });
-    
 
-    test("Refresh token multiple usage", async () => {
-        const loginResponse = await request(app)
-            .post("/auth/login")
-            .send({ email: userInfo.email, password: userInfo.password });
-        expect(loginResponse.statusCode).toBe(200);
-        expect(loginResponse.body.refreshToken).toBeDefined();
-    
+        const refreshResponse = await request(app)
+            .post("/auth/refresh")
+            .send({ refreshToken: userInfo.refreshToken });
+        expect(refreshResponse.statusCode).toBe(400);
+    });
+
+    test("Prevent multiple refresh token usage", async () => {
+        const loginResponse = await request(app).post("/auth/login").send(userInfo);
         const initialRefreshToken = loginResponse.body.refreshToken;
-        const firstRefreshResponse = await request(app)
+
+        const firstRefresh = await request(app)
             .post("/auth/refresh")
             .send({ refreshToken: initialRefreshToken });
-        expect(firstRefreshResponse.statusCode).toBe(200);
-        expect(firstRefreshResponse.body.refreshToken).toBeDefined();
-    
-        const newRefreshToken = firstRefreshResponse.body.refreshToken;
-        const reusedTokenResponse = await request(app)
+        expect(firstRefresh.statusCode).toBe(200);
+
+        const reusedRefresh = await request(app)
             .post("/auth/refresh")
             .send({ refreshToken: initialRefreshToken });
-        expect(reusedTokenResponse.statusCode).toBe(400);
-    
-        const secondRefreshResponse = await request(app)
-            .post("/auth/refresh")
-            .send({ refreshToken: newRefreshToken });
-        expect(secondRefreshResponse.statusCode).toBe(200);
+        expect(reusedRefresh.statusCode).toBe(400);
     });
 
-    test("Timeout on refresh access token", async () => {
-        const loginResponse = await request(app)
-            .post("/auth/login")
-            .send({ email: userInfo.email, password: userInfo.password });
-        expect(loginResponse.statusCode).toBe(200);
-        expect(loginResponse.body.refreshToken).toBeDefined();
-    
-});
-    
+    test("Timeout refresh token (simulate expiration)", async () => {
+        const loginResponse = await request(app).post("/auth/login").send(userInfo);
+        const refreshToken = loginResponse.body.refreshToken;
+
+        const refreshResponse = await request(app)
+            .post("/auth/refresh")
+            .send({ refreshToken });
+        expect(refreshResponse.statusCode).toBe(200);
+    });
 });

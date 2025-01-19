@@ -34,14 +34,11 @@ var __importStar = (this && this.__importStar) || (function () {
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
 const mongoose_1 = __importStar(require("mongoose"));
-// Define the schema for a Comment
 const commentSchema = new mongoose_1.Schema({
     postId: { type: mongoose_1.default.Schema.Types.ObjectId, ref: "Post", required: true },
     text: { type: String, required: true },
     sender: { type: String, required: true },
-}, { timestamps: true } // Automatically adds createdAt and updatedAt fields
-);
-// Create and export the Comment model
+}, { timestamps: true });
 const Comment = mongoose_1.default.model("Comment", commentSchema);
 exports.default = Comment;
 //# sourceMappingURL=comment.js.map

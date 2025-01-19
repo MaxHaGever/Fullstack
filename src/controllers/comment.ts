@@ -1,16 +1,14 @@
 import { Request, Response } from "express";
 import Comment from "../models/comment"
 
-// Create a comment
+
 export const createComment = async (req: Request, res: Response): Promise<void> => {
     try {
         const { postId, text } = req.body;
         const sender = req.query.userId as string;
 
-        console.log("Incoming comment data:", { postId, text, sender }); // Debug log
 
         if (!postId || !text || !sender) {
-            console.error("Missing required fields:", { postId, text, sender }); // Debug log
             res.status(400).send("Missing required fields: postId, text, or sender");
             return;
         }
@@ -19,14 +17,13 @@ export const createComment = async (req: Request, res: Response): Promise<void> 
         await comment.save();
         res.status(201).send(comment);
     } catch (err) {
-        console.error("Error creating comment:", err); // Debug log
+        console.error("Error creating comment:", err); 
         res.status(500).send("Internal Server Error");
     }
 };
 
 
 
-// Get all comments
 export const getComments = async (req: Request, res: Response): Promise<void> => {
     try {
         const comments = await Comment.find();
@@ -36,7 +33,6 @@ export const getComments = async (req: Request, res: Response): Promise<void> =>
     }
 };
 
-// Get comments by post ID
 export const getCommentsByPost = async (req: Request, res: Response): Promise<void> => {
     try {
         const comments = await Comment.find({ postId: req.params.postId });
@@ -46,7 +42,6 @@ export const getCommentsByPost = async (req: Request, res: Response): Promise<vo
     }
 };
 
-// Update a comment
 export const updateComment = async (req: Request, res: Response): Promise<void> => {
     try {
         const comment = await Comment.findByIdAndUpdate(req.params.id, req.body, { new: true });
@@ -60,7 +55,6 @@ export const updateComment = async (req: Request, res: Response): Promise<void> 
     }
 };
 
-// Delete a comment
 export const deleteComment = async (req: Request, res: Response): Promise<void> => {
     try {
         const comment = await Comment.findByIdAndDelete(req.params.id);

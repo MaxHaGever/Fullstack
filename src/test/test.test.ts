@@ -23,15 +23,12 @@ beforeAll(async () => {
         throw new Error("Database connection string (dbURI) is not defined");
     }
 
-    // Connect to the database
     await mongoose.connect(dbURI);
 
-    // Clear collections
     await Post.deleteMany();
     await Comment.deleteMany();
     await userModel.deleteMany();
 
-    // Register and login user
     await request(app).post("/auth/register").send(userInfo);
     const response = await request(app).post("/auth/login").send(userInfo);
     userInfo.token = response.body.accessToken;
@@ -39,7 +36,6 @@ beforeAll(async () => {
 });
 
 afterAll(async () => {
-    // Disconnect from the database
     await mongoose.connection.close();
 });
 

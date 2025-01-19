@@ -14,14 +14,11 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.deleteComment = exports.updateComment = exports.getCommentsByPost = exports.getComments = exports.createComment = void 0;
 const comment_1 = __importDefault(require("../models/comment"));
-// Create a comment
 const createComment = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const { postId, text } = req.body;
         const sender = req.query.userId;
-        console.log("Incoming comment data:", { postId, text, sender }); // Debug log
         if (!postId || !text || !sender) {
-            console.error("Missing required fields:", { postId, text, sender }); // Debug log
             res.status(400).send("Missing required fields: postId, text, or sender");
             return;
         }
@@ -30,12 +27,11 @@ const createComment = (req, res) => __awaiter(void 0, void 0, void 0, function* 
         res.status(201).send(comment);
     }
     catch (err) {
-        console.error("Error creating comment:", err); // Debug log
+        console.error("Error creating comment:", err);
         res.status(500).send("Internal Server Error");
     }
 });
 exports.createComment = createComment;
-// Get all comments
 const getComments = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const comments = yield comment_1.default.find();
@@ -46,7 +42,6 @@ const getComments = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
     }
 });
 exports.getComments = getComments;
-// Get comments by post ID
 const getCommentsByPost = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const comments = yield comment_1.default.find({ postId: req.params.postId });
@@ -57,7 +52,6 @@ const getCommentsByPost = (req, res) => __awaiter(void 0, void 0, void 0, functi
     }
 });
 exports.getCommentsByPost = getCommentsByPost;
-// Update a comment
 const updateComment = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const comment = yield comment_1.default.findByIdAndUpdate(req.params.id, req.body, { new: true });
@@ -72,7 +66,6 @@ const updateComment = (req, res) => __awaiter(void 0, void 0, void 0, function* 
     }
 });
 exports.updateComment = updateComment;
-// Delete a comment
 const deleteComment = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const comment = yield comment_1.default.findByIdAndDelete(req.params.id);

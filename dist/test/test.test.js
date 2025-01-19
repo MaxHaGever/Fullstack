@@ -27,20 +27,16 @@ beforeAll(() => __awaiter(void 0, void 0, void 0, function* () {
     if (!dbURI) {
         throw new Error("Database connection string (dbURI) is not defined");
     }
-    // Connect to the database
     yield mongoose_1.default.connect(dbURI);
-    // Clear collections
     yield post_1.default.deleteMany();
     yield comment_1.default.deleteMany();
     yield user_model_1.default.deleteMany();
-    // Register and login user
     yield (0, supertest_1.default)(app_1.default).post("/auth/register").send(userInfo);
     const response = yield (0, supertest_1.default)(app_1.default).post("/auth/login").send(userInfo);
     userInfo.token = response.body.accessToken;
     userInfo._id = response.body._id;
 }));
 afterAll(() => __awaiter(void 0, void 0, void 0, function* () {
-    // Disconnect from the database
     yield mongoose_1.default.connection.close();
 }));
 describe("Post and Comment API Tests", () => {

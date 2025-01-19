@@ -34,14 +34,11 @@ var __importStar = (this && this.__importStar) || (function () {
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
 const mongoose_1 = __importStar(require("mongoose"));
-// Define the schema for the Post model
 const postSchema = new mongoose_1.Schema({
     title: { type: String, required: true },
     content: { type: String, required: true },
     sender: { type: String, required: true },
-}, { timestamps: true } // Automatically adds createdAt and updatedAt fields
-);
-// Create and export the Post model
+}, { timestamps: true });
 const Post = mongoose_1.default.model("Post", postSchema);
 exports.default = Post;
 //# sourceMappingURL=post.js.map
