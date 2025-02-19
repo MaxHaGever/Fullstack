@@ -13,8 +13,8 @@ interface CustomJwtPayload extends JwtPayload {
 const register = async (req: Request, res: Response) => {
     const { email, password, username } = req.body;
 
-    if (!email || !password) {
-        res.status(400).send("Missing email or password");
+    if (!email || !password || !username) {
+        res.status(400).send("Missing username, email, or password");
         return;
     }
 
@@ -31,37 +31,24 @@ const register = async (req: Request, res: Response) => {
         const user = await Users.create({
             email,
             password: hashPassword,
-            username, 
+            username,
+            avatar: req.body.avatar || null, 
         });
 
-        const accessToken = jwt.sign(
-            { _id: user._id },
-            process.env.TOKEN_SECRET!,
-            { expiresIn: process.env.TOKEN_EXPIRATION || "1h" }
-        );
+        console.log("✅ User Created in DB:", user);
 
-        const refreshToken = jwt.sign(
-            { _id: user._id },
-            process.env.TOKEN_SECRET!,
-            { expiresIn: process.env.REFRESH_TOKEN_EXPIRATION || "1d" }
-        );
-
-        user.refreshTokens = [refreshToken];
-        await user.save();
-
-        res.status(200).send({
-            user: {
-                email: user.email,
-                username: user.username, 
-                _id: user._id,
-            },
-            accessToken,
-            refreshToken,
+        // ✅ Modify response structure (remove `user` wrapper)
+        res.status(200).json({
+            _id: user._id, 
+            email: user.email,
+            username: user.username, 
         });
     } catch (err) {
-        res.status(400).send(err);
+        res.status(500).send({ message: "Internal server error", error: err });
     }
 };
+
+
 
 const login = async (req: Request, res: Response) => {
     const { email, password } = req.body;
@@ -127,6 +114,34 @@ const login = async (req: Request, res: Response) => {
         res.status(500).send(err);
     }
 };
+
+const updateProfile = async (req: Request, res: Response): Promise<void> => {
+    try {
+        const { userId, avatar } = req.body;
+
+        if (!userId || !avatar) {
+            res.status(400).json({ message: "Missing userId or avatar URL" });
+            return;
+        }
+
+        const user = await Users.findById(userId);
+        if (!user) {
+            res.status(404).json({ message: "User not found" });
+            return;
+        }
+
+        user.avatar = avatar;
+        await user.save();
+
+        console.log(`✅ User ${user.username} updated with new avatar: ${avatar}`);
+
+        res.status(200).json({ message: "Profile updated successfully", avatar });
+    } catch (err) {
+        console.error("❌ Error updating profile:", err);
+        res.status(500).json({ message: "Internal server error", error: err });
+    }
+};
+
 
 const logout = async (req: Request, res: Response) => {
     const refreshToken = req.body.refreshToken;
@@ -242,4 +257,4 @@ export const authMiddleware = (req: Request, res: Response, next: NextFunction) 
     });
 };
 
-export default { register, login, logout, refresh };
+export default { register, login, logout, refresh, updateProfile };

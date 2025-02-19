@@ -8,6 +8,7 @@ import authRoutes from "./routes/auth_routes"
 import swaggerJsdoc from "swagger-jsdoc";
 import swaggerUi from "swagger-ui-express";
 import file_routes from "./routes/file_routes";
+import cors from "cors";
 
 const app: Application = express();
 
@@ -51,7 +52,14 @@ app.use("/posts", postRoutes);
 app.use("/comments", commentRoutes);
 app.use("/auth", authRoutes); 
 app.use("/public",express.static("public"));
+app.use("/uploads", express.static("public/uploads"));
 app.use("/file", file_routes);
+app.use(cors({ 
+    origin: "http://localhost:5173",  // ✅ Allow frontend origin
+    methods: "GET,HEAD,PUT,PATCH,POST,DELETE",
+    credentials: true,  // ✅ Allow cookies & authentication headers
+}));
+
 
 mongoose
     .connect(dbURI, {})

@@ -15,7 +15,11 @@ const userSchema = new Schema({
     refreshTokens:{
         type: [String],
         default: []
-    }
+    },
+    avatar: {
+        required: false,
+        type: String,
+    },
 })
 const Users = mongoose.model("Users", userSchema)
 export default Users

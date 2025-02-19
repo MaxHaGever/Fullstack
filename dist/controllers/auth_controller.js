@@ -32,10 +32,13 @@ const register = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
         }
         const salt = yield bcrypt_1.default.genSalt(10);
         const hashPassword = yield bcrypt_1.default.hash(password, salt);
+        if (!req.body.avatar)
+            req.body.avatar = null;
         const user = yield user_model_1.default.create({
             email,
             password: hashPassword,
             username,
+            avatar: req.body.avatar,
         });
         const accessToken = jsonwebtoken_1.default.sign({ _id: user._id }, process.env.TOKEN_SECRET, { expiresIn: process.env.TOKEN_EXPIRATION || "1h" });
         const refreshToken = jsonwebtoken_1.default.sign({ _id: user._id }, process.env.TOKEN_SECRET, { expiresIn: process.env.REFRESH_TOKEN_EXPIRATION || "1d" });
