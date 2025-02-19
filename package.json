@@ -4,11 +4,12 @@
   "description": "Matala1",
   "main": "app.js",
   "scripts": {
-    "test": "tsc && jest --detectOpenHandles --forceExit --runInBand --coverage",
-    "testAuth": "tsc && jest --detectOpenHandles --forceExit --coverage auth.test.ts",
-    "testPosts": "tsc && jest --detectOpenHandles --forceExit test.test.ts",
+    "test": "cp .env_test .env && tsc && jest --detectOpenHandles --forceExit --runInBand --coverage",
+    "testAuth": "cp .env_test .env && tsc && jest --detectOpenHandles --forceExit --coverage auth.test.ts",
+    "testPosts": "cp .env_test .env && tsc && jest --detectOpenHandles --forceExit test.test.ts",
+    "testFile": "cp .env_test .env && tsc && jest --detectOpenHandles --forceExit file.test.ts",
     "dev": "nodemon ./src/server.ts",
-    "start": "tsc && node ./dist/server.js",
+    "start": "cp .env_dev .env && tsc && node ./dist/server.js",
     "lint": "eslint . --ext .ts"
   },
   "author": "Max Spector",
@@ -19,7 +20,8 @@
     "dotenv": "^16.4.7",
     "express": "^4.21.2",
     "jsonwebtoken": "^9.0.2",
-    "mongoose": "^8.9.3"
+    "mongoose": "^8.9.3",
+    "multer": "^1.4.5-lts.1"
   },
   "devDependencies": {
     "@eslint/js": "^9.17.0",

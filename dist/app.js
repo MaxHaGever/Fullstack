@@ -12,6 +12,7 @@ const comment_routes_1 = __importDefault(require("./routes/comment_routes")); //
 const auth_routes_1 = __importDefault(require("./routes/auth_routes"));
 const swagger_jsdoc_1 = __importDefault(require("swagger-jsdoc"));
 const swagger_ui_express_1 = __importDefault(require("swagger-ui-express"));
+const file_routes_1 = __importDefault(require("./routes/file_routes"));
 const app = (0, express_1.default)();
 const options = {
     swaggerDefinition: {
@@ -34,9 +35,17 @@ if (!dbURI) {
 }
 app.use(body_parser_1.default.json());
 app.use(body_parser_1.default.urlencoded({ extended: true }));
+app.use((req, res, next) => {
+    res.header("Access-Control-Allow-Origin", "*");
+    res.header("Access-Control-Allow-Methods", "*");
+    res.header("Access-Control-Allow-Headers", "*");
+    next();
+});
 app.use("/posts", post_routes_1.default);
 app.use("/comments", comment_routes_1.default);
 app.use("/auth", auth_routes_1.default);
+app.use("/public", express_1.default.static("public"));
+app.use("/file", file_routes_1.default);
 mongoose_1.default
     .connect(dbURI, {})
     .then(() => {
@@ -44,7 +53,7 @@ mongoose_1.default
 })
     .catch((err) => {
     console.error("DB connection error:", err);
-    process.exit(1); // Exit if the DB connection fails
+    process.exit(1);
 });
 exports.default = app;
 //# sourceMappingURL=app.js.map

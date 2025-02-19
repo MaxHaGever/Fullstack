@@ -7,6 +7,7 @@ import commentRoutes from "./routes/comment_routes"; // Import Comment routes
 import authRoutes from "./routes/auth_routes"
 import swaggerJsdoc from "swagger-jsdoc";
 import swaggerUi from "swagger-ui-express";
+import file_routes from "./routes/file_routes";
 
 const app: Application = express();
 
@@ -39,9 +40,18 @@ if (!dbURI) {
 
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
+app.use((req, res, next) => {
+    res.header("Access-Control-Allow-Origin", "*");
+    res.header("Access-Control-Allow-Methods", "*");
+    res.header(
+        "Access-Control-Allow-Headers","*");
+    next();
+});
 app.use("/posts", postRoutes);
 app.use("/comments", commentRoutes);
 app.use("/auth", authRoutes); 
+app.use("/public",express.static("public"));
+app.use("/file", file_routes);
 
 mongoose
     .connect(dbURI, {})
@@ -50,7 +60,7 @@ mongoose
     })
     .catch((err) => {
         console.error("DB connection error:", err);
-        process.exit(1); // Exit if the DB connection fails
+        process.exit(1); 
     });
 
 export default app;
