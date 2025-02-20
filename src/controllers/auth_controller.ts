@@ -10,10 +10,8 @@ import { JwtPayload } from "jsonwebtoken";
 interface CustomJwtPayload extends JwtPayload {
     _id: string;
 }
-
 export const getProfile = async (req: Request, res: Response): Promise<void> => {
     try {
-        // ✅ Extract token from Authorization header
         const authHeader = req.headers.authorization;
         if (!authHeader || !authHeader.startsWith("Bearer ")) {
             res.status(401).json({ error: "Unauthorized" });
@@ -21,25 +19,29 @@ export const getProfile = async (req: Request, res: Response): Promise<void> => 
         }
 
         const token = authHeader.split(" ")[1];
-
-        if (!process.env.TOKEN_SECRET) {
-            res.status(500).json({ error: "Missing Token Secret" });
-            return;
-        }
-
-        // ✅ Decode token to get user ID
         const decoded = jwt.verify(token, process.env.TOKEN_SECRET) as { _id: string };
-        
-        // ✅ Fetch user data from database
-        const user = await Users.findById(decoded._id).select("username email _id");
+
+        const user = await Users.findById(decoded._id).select("username email _id avatar");
 
         if (!user) {
             res.status(404).json({ error: "User not found" });
             return;
         }
 
-        // ✅ Send user data as response
-        res.status(200).json(user);
+        // Ensure the avatar URL is correctly formatted (with a slash between the base URL and "uploads")
+        let avatarUrl = user.avatar;
+        if (avatarUrl && !avatarUrl.startsWith("http")) {
+            // Add the missing slash between base URL and "uploads"
+            avatarUrl = `http://localhost:3004/uploads/${avatarUrl}`;
+        }
+
+        // Return the user data with the correctly formatted avatar URL
+        res.status(200).json({
+            _id: user._id,
+            username: user.username,
+            email: user.email,
+            avatar: avatarUrl, // Avatar URL should be correct now
+        });
     } catch (error) {
         console.error("❌ Error fetching profile:", error);
         res.status(500).json({ error: "Internal Server Error" });
@@ -47,44 +49,55 @@ export const getProfile = async (req: Request, res: Response): Promise<void> => 
 };
 
 
-
 const register = async (req: Request, res: Response) => {
-    const { email, password, username } = req.body;
-
+    const { email, password, username, avatar } = req.body;
+  
     if (!email || !password || !username) {
-        res.status(400).send("Missing username, email, or password");
-        return;
+      res.status(400).send("Missing username, email, or password");
+      return;
     }
-
+  
     try {
-        const existingUser = await Users.findOne({ email });
-        if (existingUser) {
-            res.status(400).send("Email already registered");
-            return;
-        }
-
-        const salt = await bcrypt.genSalt(10);
-        const hashPassword = await bcrypt.hash(password, salt);
-
-        const user = await Users.create({
-            email,
-            password: hashPassword,
-            username,
-            avatar: req.body.avatar || null, 
-        });
-
-        console.log("✅ User Created in DB:", user);
-
-        // ✅ Modify response structure (remove `user` wrapper)
-        res.status(200).json({
-            _id: user._id, 
-            email: user.email,
-            username: user.username, 
-        });
+      const existingUser = await Users.findOne({ email });
+      if (existingUser) {
+        res.status(400).send("Email already registered");
+        return;
+      }
+  
+      const salt = await bcrypt.genSalt(10);
+      const hashPassword = await bcrypt.hash(password, salt);
+  
+      // Create the user without avatar first
+      const user = await Users.create({
+        email,
+        password: hashPassword,
+        username,
+        avatar: avatar || null, // If avatar is provided
+      });
+  
+      console.log("✅ User Created in DB:", user);
+  
+      // Fix: Ensure the avatar URL is correctly formatted with a slash only once
+      if (user.avatar && !user.avatar.startsWith('http://localhost:3004/uploads/')) {
+        // Only prepend base URL if not present
+        user.avatar = `http://localhost:3004/uploads/${user.avatar}`;
+      }
+  
+      await user.save(); // Save user with the correct avatar URL
+  
+      // Send response with correct avatar URL
+      res.status(200).json({
+        _id: user._id, 
+        email: user.email,
+        username: user.username, 
+        avatar: user.avatar,  // Return the correct avatar URL
+      });
     } catch (err) {
-        res.status(500).send({ message: "Internal server error", error: err });
+      console.error("❌ Error during registration:", err);
+      res.status(500).send({ message: "Internal server error", error: err });
     }
-};
+  };
+  
 
 
 
@@ -155,30 +168,55 @@ const login = async (req: Request, res: Response) => {
 
 const updateProfile = async (req: Request, res: Response): Promise<void> => {
     try {
-        const { userId, avatar } = req.body;
-
-        if (!userId || !avatar) {
-            res.status(400).json({ message: "Missing userId or avatar URL" });
-            return;
-        }
-
-        const user = await Users.findById(userId);
-        if (!user) {
-            res.status(404).json({ message: "User not found" });
-            return;
-        }
-
+      const { userId, username, email, password, avatar } = req.body;
+  
+      if (!userId) {
+        res.status(400).json({ message: "Missing userId" });
+        return;
+      }
+  
+      const user = await Users.findById(userId);
+      if (!user) {
+        res.status(404).json({ message: "User not found" });
+        return;
+      }
+  
+      // Update fields if provided
+      if (username) user.username = username;
+      if (email) user.email = email;
+  
+      if (password) {
+        const salt = await bcrypt.genSalt(10);
+        user.password = await bcrypt.hash(password, salt);
+      }
+  
+      // Fix avatar URL if necessary
+      if (avatar && !avatar.startsWith("http")) {
+        user.avatar = `http://localhost:3004/uploads/${avatar}`;
+      } else {
         user.avatar = avatar;
-        await user.save();
-
-        console.log(`✅ User ${user.username} updated with new avatar: ${avatar}`);
-
-        res.status(200).json({ message: "Profile updated successfully", avatar });
+      }
+  
+      await user.save();
+  
+      console.log(`✅ User ${user.username} updated successfully`);
+  
+      res.status(200).json({
+        message: "Profile updated successfully",
+        user: {
+          _id: user._id,
+          username: user.username,
+          email: user.email,
+          avatar: user.avatar,
+        },
+      });
     } catch (err) {
-        console.error("❌ Error updating profile:", err);
-        res.status(500).json({ message: "Internal server error", error: err });
+      console.error("❌ Error updating profile:", err);
+      res.status(500).json({ message: "Internal server error", error: err });
     }
-};
+  };
+  
+
 
 
 const logout = async (req: Request, res: Response) => {
@@ -294,5 +332,7 @@ export const authMiddleware = (req: Request, res: Response, next: NextFunction) 
         next();
     });
 };
+
+
 
 export default { register, login, logout, refresh, updateProfile, getProfile };
