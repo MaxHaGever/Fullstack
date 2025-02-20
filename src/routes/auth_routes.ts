@@ -1,5 +1,7 @@
 import express from "express";
 import authController from "../controllers/auth_controller";
+import { getProfile } from "../controllers/auth_controller";
+import { authMiddleware } from "../controllers/auth_controller"; 
 
 const router = express.Router();
 
@@ -139,10 +141,46 @@ const router = express.Router();
  *         description: User logged out successfully
  */
 
+/**
+ * @swagger
+ * /auth/profile:
+ *   get:
+ *     summary: Get the authenticated user's profile
+ *     tags: [Auth]
+ *     security:
+ *       - bearerAuth: []  # Requires JWT token
+ *     responses:
+ *       200:
+ *         description: Successfully retrieved user profile
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 username:
+ *                   type: string
+ *                   description: The user's username
+ *                 email:
+ *                   type: string
+ *                   description: The user's email
+ *                 _id:
+ *                   type: string
+ *                   description: The user's unique ID
+ *       401:
+ *         description: Unauthorized, missing or invalid token
+ *       404:
+ *         description: User not found
+ *       500:
+ *         description: Internal server error
+ */
+
+
+
 router.post("/register", authController.register);
 router.post("/login", authController.login);
 router.post("/logout", authController.logout);
 router.post("/refresh", authController.refresh);
 router.put("/updateProfile", authController.updateProfile);
+router.get("/profile", authMiddleware, getProfile);
 
 export default router;

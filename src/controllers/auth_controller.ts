@@ -6,9 +6,47 @@ import dotenv from "dotenv";
 dotenv.config();
 import { JwtPayload } from "jsonwebtoken";
 
+
 interface CustomJwtPayload extends JwtPayload {
     _id: string;
 }
+
+export const getProfile = async (req: Request, res: Response): Promise<void> => {
+    try {
+        // ✅ Extract token from Authorization header
+        const authHeader = req.headers.authorization;
+        if (!authHeader || !authHeader.startsWith("Bearer ")) {
+            res.status(401).json({ error: "Unauthorized" });
+            return;
+        }
+
+        const token = authHeader.split(" ")[1];
+
+        if (!process.env.TOKEN_SECRET) {
+            res.status(500).json({ error: "Missing Token Secret" });
+            return;
+        }
+
+        // ✅ Decode token to get user ID
+        const decoded = jwt.verify(token, process.env.TOKEN_SECRET) as { _id: string };
+        
+        // ✅ Fetch user data from database
+        const user = await Users.findById(decoded._id).select("username email _id");
+
+        if (!user) {
+            res.status(404).json({ error: "User not found" });
+            return;
+        }
+
+        // ✅ Send user data as response
+        res.status(200).json(user);
+    } catch (error) {
+        console.error("❌ Error fetching profile:", error);
+        res.status(500).json({ error: "Internal Server Error" });
+    }
+};
+
+
 
 const register = async (req: Request, res: Response) => {
     const { email, password, username } = req.body;
@@ -257,4 +295,4 @@ export const authMiddleware = (req: Request, res: Response, next: NextFunction) 
     });
 };
 
-export default { register, login, logout, refresh, updateProfile };
+export default { register, login, logout, refresh, updateProfile, getProfile };
