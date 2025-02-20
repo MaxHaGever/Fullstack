@@ -10,12 +10,13 @@ export interface IComment extends Document {
 
 const commentSchema: Schema<IComment> = new Schema(
     {
-        postId: { type: mongoose.Schema.Types.ObjectId, ref: "Post", required: true },
+        postId: { type: mongoose.Schema.Types.ObjectId, ref: "Post", required: true }, // Ensure reference to Post
         text: { type: String, required: true },
         sender: { type: String, required: true },
     },
-    { timestamps: true } 
+    { timestamps: true }
 );
+
 
 const Comment: Model<IComment> = mongoose.model<IComment>("Comment", commentSchema);
 
