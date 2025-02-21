@@ -4,35 +4,42 @@ import Post from "../models/post";
 // Create a new post
 export const createPost = async (req: Request, res: Response): Promise<void> => {
     try {
-        const userId = req.query.userId as string;
+        console.log("💾 Incoming Request Body:", req.body);
+        console.log("📸 Uploaded File:", req.file);
+        console.log("🔐 User ID from Query:", req.query.userId); // ✅ Now reading from req.query
 
+        const userId = req.query.userId as string; // ✅ Get userId from query instead of req.user
         if (!userId) {
-            res.status(400).send({ error: "User ID is required" });
+            res.status(401).json({ error: "Unauthorized: User ID not found" });
             return;
         }
 
-        const { title, content, image } = req.body;
-
+        const { title, content } = req.body;
         if (!title || !content) {
-            res.status(400).send({ error: "Title and content are required" });
+            res.status(400).json({ error: "Title and content are required" });
             return;
         }
+
+        const imagePath = req.file ? `/uploads/${req.file.filename}` : undefined;
 
         const post = new Post({
             title,
             content,
-            sender: userId,
-            image,
+            sender: userId, // ✅ Now correctly uses userId from query
+            image: imagePath,
             likes: 0,
         });
 
         await post.save();
-        res.status(201).send(post);
+        res.status(201).json(post);
     } catch (err) {
-        console.error("Error creating post:", err);
-        res.status(500).send({ error: "Failed to create post", details: err });
+        console.error("🚨 Error creating post:", err);
+        res.status(500).json({ error: "Failed to create post", details: err.message });
     }
 };
+
+
+
 
 // Get all posts with comments populated
 export const getPosts = async (req: Request, res: Response): Promise<void> => {
