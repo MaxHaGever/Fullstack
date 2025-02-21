@@ -35,12 +35,27 @@ export const getComments = async (req: Request, res: Response): Promise<void> =>
 
 export const getCommentsByPost = async (req: Request, res: Response): Promise<void> => {
     try {
-        const comments = await Comment.find({ postId: req.params.postId });
+        const { postId } = req.params;
+        console.log(`🔍 Fetching comments for post: ${postId}`);
+
+        if (!postId) {
+            res.status(400).send({ error: "Missing postId parameter" });
+            return;
+        }
+
+        const comments = await Comment.find({ postId }).exec();
+        if (!comments || comments.length === 0) {
+            res.status(404).send({ error: "No comments found for this post" });
+            return;
+        }
+
         res.status(200).send(comments);
     } catch (err) {
+        console.error("❌ Error fetching comments:", err);
         res.status(500).send(err);
     }
 };
+
 
 export const updateComment = async (req: Request, res: Response): Promise<void> => {
     try {
