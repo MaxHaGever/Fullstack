@@ -2,25 +2,35 @@ import { Request, Response } from "express";
 import Comment from "../models/comment"
 
 
+
 export const createComment = async (req: Request, res: Response): Promise<void> => {
     try {
+        console.log("📥 Incoming Comment Request:", req.body);
+
         const { postId, text } = req.body;
-        const sender = req.query.userId as string;
+        const userId = req.query.userId as string; // ✅ Extract user ID from token
 
-
-        if (!postId || !text || !sender) {
-            res.status(400).send("Missing required fields: postId, text, or sender");
+        if (!postId || !text || !userId) {
+            res.status(400).send({ error: "Missing required fields: postId, text, or user ID" });
             return;
         }
 
-        const comment = new Comment({ postId, text, sender });
+        const comment = new Comment({ postId, text, sender: userId });
         await comment.save();
+
+        console.log("✅ Comment Created Successfully:", comment);
         res.status(201).send(comment);
     } catch (err) {
-        console.error("Error creating comment:", err); 
-        res.status(500).send("Internal Server Error");
+        console.error("🚨 Error creating comment:", err);
+        res.status(500).send({ error: "Internal Server Error", details: err });
     }
 };
+
+
+
+
+
+
 
 
 
@@ -35,26 +45,22 @@ export const getComments = async (req: Request, res: Response): Promise<void> =>
 
 export const getCommentsByPost = async (req: Request, res: Response): Promise<void> => {
     try {
-        const { postId } = req.params;
-        console.log(`🔍 Fetching comments for post: ${postId}`);
+        console.log(`🔍 Fetching comments for postId: ${req.params.postId}`);
 
-        if (!postId) {
-            res.status(400).send({ error: "Missing postId parameter" });
-            return;
-        }
-
-        const comments = await Comment.find({ postId }).exec();
-        if (!comments || comments.length === 0) {
-            res.status(404).send({ error: "No comments found for this post" });
-            return;
-        }
+        const comments = await Comment.find({ postId: req.params.postId })
+            .populate("sender", "username") // ✅ Fetch username instead of ID
+            .exec();
 
         res.status(200).send(comments);
     } catch (err) {
-        console.error("❌ Error fetching comments:", err);
-        res.status(500).send(err);
+        console.error("❌ Error fetching comments by post:", err);
+        res.status(500).send({ error: "Failed to fetch comments", details: err });
     }
 };
+
+
+
+
 
 
 export const updateComment = async (req: Request, res: Response): Promise<void> => {

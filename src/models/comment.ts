@@ -1,22 +1,21 @@
-import mongoose, { Document, Schema, Model } from "mongoose";
+import mongoose, { Document, Schema, Model, Types } from "mongoose";
 
 export interface IComment extends Document {
-    postId: mongoose.Schema.Types.ObjectId; 
+    postId: Types.ObjectId; 
     text: string;
-    sender: string;
+    sender: Types.ObjectId;  // ✅ Fix TypeScript Error
     createdAt?: Date; 
     updatedAt?: Date;
 }
 
 const commentSchema: Schema<IComment> = new Schema(
     {
-        postId: { type: mongoose.Schema.Types.ObjectId, ref: "Post", required: true }, // Ensure reference to Post
+        postId: { type: Schema.Types.ObjectId, ref: "Post", required: true }, 
         text: { type: String, required: true },
-        sender: { type: String, required: true },
+        sender: { type: Schema.Types.ObjectId, ref: "Users", required: true }, // ✅ Fixed TypeScript Issue
     },
     { timestamps: true }
 );
-
 
 const Comment: Model<IComment> = mongoose.model<IComment>("Comment", commentSchema);
 
