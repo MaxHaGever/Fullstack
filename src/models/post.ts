@@ -5,7 +5,8 @@ export interface IPost extends Document {
     title: string;
     content: string;
     sender: string;
-    image?: string; // ✅ Add image field
+    senderUsername: string; // ✅ Add senderUsername
+    image?: string;
     createdAt?: Date;
     updatedAt?: Date;
     comments: IComment[];
@@ -17,7 +18,8 @@ const postSchema: Schema = new Schema<IPost>(
         title: { type: String, required: true },
         content: { type: String, required: true },
         sender: { type: String, required: true },
-        image: { type: String, default: null }, // ✅ Add image field
+        senderUsername: { type: String, required: true }, // ✅ Add senderUsername
+        image: { type: String, default: null },
         comments: [{ type: mongoose.Schema.Types.ObjectId, ref: "Comment" }],
         likes: { type: Number, default: 0 },
     },
