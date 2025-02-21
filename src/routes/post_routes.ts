@@ -151,7 +151,10 @@ router.get("/:id", getPostById);
  *       200:
  *         description: The updated post
  */
-router.put("/:id", authMiddleware, updatePost);
+
+
+router.put("/:id", authMiddleware, upload.single("image"), updatePost);
+
 
 /**
  * @swagger

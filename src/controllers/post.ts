@@ -107,38 +107,75 @@ export const likePost = async (req: Request, res: Response): Promise<void> => {
 // Update a post
 export const updatePost = async (req: Request, res: Response): Promise<void> => {
     try {
-        console.log("📥 Incoming Update Request:", req.body); // ✅ Log request body
-        console.log("🔍 Post ID:", req.params.id); // ✅ Log post ID
+        console.log("📥 Incoming Update Request:", req.body);
+        console.log("🔍 Post ID:", req.params.id);
+        console.log("📸 Uploaded Image:", req.file);
 
-        const post = await Post.findByIdAndUpdate(req.params.id, req.body, { new: true });
+        const post = await Post.findById(req.params.id);
         if (!post) {
             res.status(404).send({ error: "Post not found" });
             return;
         }
 
-        console.log("✅ Post Updated Successfully:", post); // ✅ Confirm update
-        res.status(200).send(post);
+        // ✅ Update title and content
+        post.title = req.body.title || post.title;
+        post.content = req.body.content || post.content;
+
+        // ✅ Handle image upload
+        if (req.file) {
+            post.image = `/public/postimages/${req.file.filename}`;
+            console.log("✅ Image Updated:", post.image);
+        }
+
+        await post.save();
+        console.log("✅ Post Updated Successfully:", post);
+        res.status(200).json(post);
     } catch (err) {
         console.error("❌ Error updating post:", err);
-        res.status(400).send({ error: "Failed to update post", details: err.message });
+        res.status(500).send({ error: "Failed to update post", details: err.message });
     }
 };
+
+
+
+
 
 
 // Delete a post
+import fs from "fs";
+import path from "path";
+
 export const deletePost = async (req: Request, res: Response): Promise<void> => {
     try {
-        const post = await Post.findByIdAndDelete(req.params.id);
+        const post = await Post.findById(req.params.id);
         if (!post) {
             res.status(404).send({ error: "Post not found" });
             return;
         }
-        res.status(200).send(post);
+
+        // ✅ Delete the image file from the server
+        if (post.image) {
+            const imagePath = path.join(__dirname, "..", post.image);
+            fs.unlink(imagePath, (err) => {
+                if (err) {
+                    console.error("⚠️ Error deleting image file:", err);
+                } else {
+                    console.log("✅ Image file deleted:", imagePath);
+                }
+            });
+        }
+
+        // ✅ Delete the post from the database
+        await Post.findByIdAndDelete(req.params.id);
+        console.log("✅ Post deleted:", post._id);
+
+        res.status(200).json({ message: "Post deleted successfully", post });
     } catch (err) {
-        console.error("Error deleting post:", err);
-        res.status(500).send({ error: "Failed to delete post", details: err });
+        console.error("❌ Error deleting post:", err);
+        res.status(500).send({ error: "Failed to delete post", details: err.message });
     }
 };
+
 
 // Get posts by sender (user)
 export const getPostsBySender = async (req: Request, res: Response): Promise<void> => {
