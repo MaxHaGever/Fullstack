@@ -78,14 +78,27 @@ export const updateComment = async (req: Request, res: Response): Promise<void> 
 
 export const deleteComment = async (req: Request, res: Response): Promise<void> => {
     try {
-        const comment = await Comment.findByIdAndDelete(req.params.id);
+        const commentId = req.params.id;
+        const userId = req.query.userId as string; // ✅ Get user ID from token
+
+        const comment = await Comment.findById(commentId);
         if (!comment) {
-            res.status(404).send("Comment not found");
+            res.status(404).send({ error: "Comment not found" });
             return;
         }
-        res.status(200).send(comment);
+
+        // ✅ Ensure only the comment owner can delete it
+        if (comment.sender.toString() !== userId) {
+            res.status(403).send({ error: "Unauthorized: You can only delete your own comments" });
+            return;
+        }
+
+        await Comment.findByIdAndDelete(commentId);
+        res.status(200).send({ message: "Comment deleted successfully" });
     } catch (err) {
-        res.status(500).send(err);
+        console.error("❌ Error deleting comment:", err);
+        res.status(500).send({ error: "Failed to delete comment", details: err });
     }
 };
+
 
