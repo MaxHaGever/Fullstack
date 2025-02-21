@@ -47,8 +47,39 @@ export const createPost = async (req: Request, res: Response): Promise<void> => 
 };
 
 
+export const toggleLike = async (req: Request, res: Response): Promise<void> => {
+    try {
+        const postId = req.params.id;
+        const userId = req.query.userId as string; // ✅ Extract user ID from JWT
 
+        if (!userId) {
+            res.status(401).json({ error: "Unauthorized: User ID not found" });
+            return;
+        }
 
+        const post = await Post.findById(postId);
+        if (!post) {
+            res.status(404).json({ error: "Post not found" });
+            return;
+        }
+
+        // Toggle Like: If user has already liked, remove the like. If not, add it.
+        const hasLiked = post.likedBy.includes(userId);
+        if (hasLiked) {
+            post.likes -= 1;
+            post.likedBy = post.likedBy.filter(id => id !== userId); // Remove user ID
+        } else {
+            post.likes += 1;
+            post.likedBy.push(userId); // Add user ID
+        }
+
+        await post.save();
+        res.status(200).json({ likes: post.likes });
+    } catch (err) {
+        console.error("❌ Error toggling like:", err);
+        res.status(500).json({ error: "Failed to toggle like", details: err });
+    }
+};
 
 
 

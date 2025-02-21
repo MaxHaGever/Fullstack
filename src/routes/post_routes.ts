@@ -10,6 +10,7 @@ import {
     getPostsBySender,
     updatePost,
     deletePost,
+    toggleLike,
 } from "../controllers/post";
 
 const router: Router = express.Router();
@@ -176,5 +177,7 @@ router.put("/:id", authMiddleware, upload.single("image"), updatePost);
  *         description: Post deleted successfully
  */
 router.delete("/:id", authMiddleware, deletePost);
+router.post("/:id/like", authMiddleware, toggleLike);
+
 
 export default router;
