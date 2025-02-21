@@ -1,5 +1,6 @@
 import { Request, Response } from "express";
 import Post from "../models/post";
+import Comment from "../models/comment";
 
 // Create a new post
 export const createPost = async (req: Request, res: Response): Promise<void> => {
@@ -57,15 +58,40 @@ export const createPost = async (req: Request, res: Response): Promise<void> => 
 export const getPosts = async (req: Request, res: Response): Promise<void> => {
     try {
         const posts = await Post.find()
-            .populate("comments") // Populate the comments field
-            .exec();
+            .populate({
+                path: "comments",
+                select: "_id", // ✅ Only fetch `_id` to optimize performance
+            })
+            .exec(); // ✅ Ensures full execution of query
 
-        res.status(200).send(posts);
+        // ✅ Fetch the actual count of comments using aggregation
+        const postsWithCommentCount = await Promise.all(
+            posts.map(async (post) => {
+                const commentCount = await Comment.countDocuments({ postId: post._id });
+                return {
+                    _id: post._id,
+                    title: post.title,
+                    content: post.content,
+                    sender: post.sender,
+                    senderUsername: post.senderUsername, // ✅ If applicable
+                    image: post.image,
+                    likes: post.likes,
+                    createdAt: post.createdAt,
+                    updatedAt: post.updatedAt,
+                    commentCount, // ✅ Correctly count comments using aggregation
+                };
+            })
+        );
+
+        res.status(200).json(postsWithCommentCount); // ✅ Send response with comment count
     } catch (err) {
-        console.error("Error fetching posts:", err);
-        res.status(500).send({ error: "Failed to fetch posts", details: err });
+        console.error("❌ Error fetching posts:", err);
+        res.status(500).json({ error: "Failed to fetch posts", details: err });
     }
 };
+
+
+
 
 // Get a specific post by ID
 export const getPostById = async (req: Request, res: Response): Promise<void> => {
@@ -136,12 +162,6 @@ export const updatePost = async (req: Request, res: Response): Promise<void> => 
     }
 };
 
-
-
-
-
-
-// Delete a post
 import fs from "fs";
 import path from "path";
 
