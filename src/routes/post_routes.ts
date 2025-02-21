@@ -1,5 +1,8 @@
 import express, { Router } from "express";
 import { authMiddleware } from "../controllers/auth_controller";
+import multer from "multer";
+import fs from "fs";
+import path from "path";
 import {
     createPost,
     getPosts,
@@ -11,54 +14,38 @@ import {
 
 const router: Router = express.Router();
 
-/**
- * @swagger
- * components:
- *   securitySchemes:
- *     bearerAuth:
- *       type: http
- *       scheme: bearer
- *       bearerFormat: JWT
- *   schemas:
- *     Post:
- *       type: object
- *       required:
- *         - title
- *         - content
- *       properties:
- *         title:
- *           type: string
- *           example: "Post Title"
- *         content:
- *           type: string
- *           example: "Post Content"
- *         sender:
- *           type: string
- *           example: "60d5ec9b6f4b3b0015f3f7b3"
- *         _id:
- *           type: string
- *           example: "60d5ec9b6f4b3b0015f3f7b4"
- */
+// ✅ Ensure `public/postimages/` directory exists before using multer
+const uploadPath = path.join(__dirname, "../public/postimages/");
+if (!fs.existsSync(uploadPath)) {
+    fs.mkdirSync(uploadPath, { recursive: true }); // ✅ Create folder if missing
+}
 
-/**
- * @swagger
- * tags:
- *   name: Posts
- *   description: The Posts API
- */
+// ✅ Configure `multer` to store images in `public/postimages/`
+const storage = multer.diskStorage({
+    destination: (req, file, cb) => {
+        cb(null, uploadPath);
+    },
+    filename: (req, file, cb) => {
+        cb(null, "post-" + Date.now() + path.extname(file.originalname)); // ✅ Unique file name
+    },
+});
+
+const upload = multer({ storage });
 
 /**
  * @swagger
  * /posts:
  *   post:
- *     summary: Add a new post
+ *     summary: Add a new post (with optional image)
  *     security:
  *       - bearerAuth: []
  *     tags: [Posts]
+ *     consumes:
+ *       - multipart/form-data
  *     requestBody:
  *       required: true
  *       content:
- *         application/json:
+ *         multipart/form-data:
  *           schema:
  *             type: object
  *             properties:
@@ -70,17 +57,17 @@ const router: Router = express.Router();
  *                 type: string
  *                 description: Content of the post
  *                 example: "This is the content of my first post"
+ *               image:
+ *                 type: string
+ *                 format: binary
+ *                 description: (Optional) Image file
  *     responses:
  *       201:
  *         description: Post added successfully
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/Post'
  *       401:
  *         description: Unauthorized access
  */
-router.post("/", authMiddleware, createPost);
+router.post("/", authMiddleware, upload.single("image"), createPost);
 
 /**
  * @swagger
@@ -91,12 +78,6 @@ router.post("/", authMiddleware, createPost);
  *     responses:
  *       200:
  *         description: A list of all posts
- *         content:
- *           application/json:
- *             schema:
- *               type: array
- *               items:
- *                 $ref: '#/components/schemas/Post'
  */
 router.get("/", getPosts);
 
@@ -116,14 +97,6 @@ router.get("/", getPosts);
  *     responses:
  *       200:
  *         description: A list of posts by the sender
- *         content:
- *           application/json:
- *             schema:
- *               type: array
- *               items:
- *                 $ref: '#/components/schemas/Post'
- *       400:
- *         description: Missing or invalid sender ID
  */
 router.get("/by-sender", getPostsBySender);
 
@@ -143,12 +116,6 @@ router.get("/by-sender", getPostsBySender);
  *     responses:
  *       200:
  *         description: The requested post
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/Post'
- *       404:
- *         description: Post not found
  */
 router.get("/:id", getPostById);
 
@@ -183,14 +150,6 @@ router.get("/:id", getPostById);
  *     responses:
  *       200:
  *         description: The updated post
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/Post'
- *       401:
- *         description: Unauthorized access
- *       404:
- *         description: Post not found
  */
 router.put("/:id", authMiddleware, updatePost);
 
@@ -212,18 +171,6 @@ router.put("/:id", authMiddleware, updatePost);
  *     responses:
  *       200:
  *         description: Post deleted successfully
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 message:
- *                   type: string
- *                   example: "Post deleted successfully"
- *       401:
- *         description: Unauthorized access
- *       404:
- *         description: Post not found
  */
 router.delete("/:id", authMiddleware, deletePost);
 

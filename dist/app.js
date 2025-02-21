@@ -13,6 +13,8 @@ const auth_routes_1 = __importDefault(require("./routes/auth_routes"));
 const swagger_jsdoc_1 = __importDefault(require("swagger-jsdoc"));
 const swagger_ui_express_1 = __importDefault(require("swagger-ui-express"));
 const file_routes_1 = __importDefault(require("./routes/file_routes"));
+const cors_1 = __importDefault(require("cors"));
+const path_1 = __importDefault(require("path"));
 const app = (0, express_1.default)();
 const options = {
     swaggerDefinition: {
@@ -45,7 +47,14 @@ app.use("/posts", post_routes_1.default);
 app.use("/comments", comment_routes_1.default);
 app.use("/auth", auth_routes_1.default);
 app.use("/public", express_1.default.static("public"));
+app.use("/uploads", express_1.default.static("public/uploads"));
 app.use("/file", file_routes_1.default);
+app.use((0, cors_1.default)({
+    origin: "http://localhost:5173", // ✅ Allow frontend origin
+    methods: "GET,HEAD,PUT,PATCH,POST,DELETE",
+    credentials: true, // ✅ Allow cookies & authentication headers
+}));
+app.use("/public", express_1.default.static(path_1.default.join(__dirname, "public")));
 mongoose_1.default
     .connect(dbURI, {})
     .then(() => {

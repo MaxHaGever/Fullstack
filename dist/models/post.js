@@ -38,6 +38,9 @@ const postSchema = new mongoose_1.Schema({
     title: { type: String, required: true },
     content: { type: String, required: true },
     sender: { type: String, required: true },
+    image: { type: String, default: null }, // ✅ Add image field
+    comments: [{ type: mongoose_1.default.Schema.Types.ObjectId, ref: "Comment" }],
+    likes: { type: Number, default: 0 },
 }, { timestamps: true });
 const Post = mongoose_1.default.model("Post", postSchema);
 exports.default = Post;

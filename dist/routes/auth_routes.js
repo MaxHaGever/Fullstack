@@ -5,6 +5,8 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = __importDefault(require("express"));
 const auth_controller_1 = __importDefault(require("../controllers/auth_controller"));
+const auth_controller_2 = require("../controllers/auth_controller");
+const auth_controller_3 = require("../controllers/auth_controller");
 const router = express_1.default.Router();
 /**
  * @swagger
@@ -137,9 +139,43 @@ const router = express_1.default.Router();
  *       200:
  *         description: User logged out successfully
  */
+/**
+ * @swagger
+ * /auth/profile:
+ *   get:
+ *     summary: Get the authenticated user's profile
+ *     tags: [Auth]
+ *     security:
+ *       - bearerAuth: []  # Requires JWT token
+ *     responses:
+ *       200:
+ *         description: Successfully retrieved user profile
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 username:
+ *                   type: string
+ *                   description: The user's username
+ *                 email:
+ *                   type: string
+ *                   description: The user's email
+ *                 _id:
+ *                   type: string
+ *                   description: The user's unique ID
+ *       401:
+ *         description: Unauthorized, missing or invalid token
+ *       404:
+ *         description: User not found
+ *       500:
+ *         description: Internal server error
+ */
 router.post("/register", auth_controller_1.default.register);
 router.post("/login", auth_controller_1.default.login);
 router.post("/logout", auth_controller_1.default.logout);
 router.post("/refresh", auth_controller_1.default.refresh);
+router.put("/updateProfile", auth_controller_1.default.updateProfile);
+router.get("/profile", auth_controller_3.authMiddleware, auth_controller_2.getProfile);
 exports.default = router;
 //# sourceMappingURL=auth_routes.js.map

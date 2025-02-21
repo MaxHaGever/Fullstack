@@ -35,7 +35,7 @@ var __importStar = (this && this.__importStar) || (function () {
 Object.defineProperty(exports, "__esModule", { value: true });
 const mongoose_1 = __importStar(require("mongoose"));
 const commentSchema = new mongoose_1.Schema({
-    postId: { type: mongoose_1.default.Schema.Types.ObjectId, ref: "Post", required: true },
+    postId: { type: mongoose_1.default.Schema.Types.ObjectId, ref: "Post", required: true }, // Ensure reference to Post
     text: { type: String, required: true },
     sender: { type: String, required: true },
 }, { timestamps: true });

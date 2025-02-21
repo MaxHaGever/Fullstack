@@ -9,6 +9,7 @@ import swaggerJsdoc from "swagger-jsdoc";
 import swaggerUi from "swagger-ui-express";
 import file_routes from "./routes/file_routes";
 import cors from "cors";
+import path from "path";
 
 const app: Application = express();
 
@@ -59,6 +60,7 @@ app.use(cors({
     methods: "GET,HEAD,PUT,PATCH,POST,DELETE",
     credentials: true,  // ✅ Allow cookies & authentication headers
 }));
+app.use("/public", express.static(path.join(__dirname, "public")));
 
 
 mongoose

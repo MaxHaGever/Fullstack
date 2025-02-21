@@ -5,10 +5,10 @@ import Post from "../models/post";
 export const createPost = async (req: Request, res: Response): Promise<void> => {
     try {
         console.log("💾 Incoming Request Body:", req.body);
-        console.log("📸 Uploaded File:", req.file);
-        console.log("🔐 User ID from Query:", req.query.userId); // ✅ Now reading from req.query
+        console.log("📸 Uploaded File:", req.file); // ✅ Log file upload
+        console.log("🔐 User ID from JWT:", req.query.userId);
 
-        const userId = req.query.userId as string; // ✅ Get userId from query instead of req.user
+        const userId = req.query.userId as string;
         if (!userId) {
             res.status(401).json({ error: "Unauthorized: User ID not found" });
             return;
@@ -20,23 +20,31 @@ export const createPost = async (req: Request, res: Response): Promise<void> => 
             return;
         }
 
-        const imagePath = req.file ? `/uploads/${req.file.filename}` : undefined;
+        if (!req.file) {
+            console.error("🚨 No file uploaded!");
+        }
+
+        const imagePath = req.file ? `/public/postimages/${req.file.filename}` : null; 
 
         const post = new Post({
             title,
             content,
-            sender: userId, // ✅ Now correctly uses userId from query
-            image: imagePath,
+            sender: userId,
+            image: imagePath, // ✅ Store image path in DB
             likes: 0,
         });
 
         await post.save();
+        console.log("✅ Post Created:", post); // ✅ Log post creation
         res.status(201).json(post);
     } catch (err) {
         console.error("🚨 Error creating post:", err);
         res.status(500).json({ error: "Failed to create post", details: err.message });
     }
 };
+
+
+
 
 
 
