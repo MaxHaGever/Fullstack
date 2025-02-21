@@ -1,6 +1,7 @@
 import { Request, Response } from "express";
 import Post from "../models/post";
 import Comment from "../models/comment";
+import User from "../models/user_model"
 
 // Create a new post
 export const createPost = async (req: Request, res: Response): Promise<void> => {
@@ -91,14 +92,18 @@ export const getPosts = async (req: Request, res: Response): Promise<void> => {
         const posts = await Post.find()
             .populate({
                 path: "comments",
-                select: "_id", // ✅ Only fetch `_id` to optimize performance
+                select: "_id", // ✅ Fetch only `_id` to optimize performance
             })
-            .exec(); // ✅ Ensures full execution of query
+            .exec();
 
-        // ✅ Fetch the actual count of comments using aggregation
-        const postsWithCommentCount = await Promise.all(
+        // ✅ Fetch the actual count of comments and liked usernames
+        const postsWithDetails = await Promise.all(
             posts.map(async (post) => {
                 const commentCount = await Comment.countDocuments({ postId: post._id });
+
+                // ✅ Fetch usernames of users who liked the post
+                const likedUsers = await User.find({ _id: { $in: post.likedBy } }).select("username");
+
                 return {
                     _id: post._id,
                     title: post.title,
@@ -107,14 +112,15 @@ export const getPosts = async (req: Request, res: Response): Promise<void> => {
                     senderUsername: post.senderUsername, // ✅ If applicable
                     image: post.image,
                     likes: post.likes,
+                    likedUsernames: likedUsers.map(user => user.username), // ✅ Extract usernames
                     createdAt: post.createdAt,
                     updatedAt: post.updatedAt,
-                    commentCount, // ✅ Correctly count comments using aggregation
+                    commentCount, // ✅ Correctly count comments
                 };
             })
         );
 
-        res.status(200).json(postsWithCommentCount); // ✅ Send response with comment count
+        res.status(200).json(postsWithDetails); // ✅ Send response with like details
     } catch (err) {
         console.error("❌ Error fetching posts:", err);
         res.status(500).json({ error: "Failed to fetch posts", details: err });
